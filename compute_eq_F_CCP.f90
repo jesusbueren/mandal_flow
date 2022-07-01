@@ -9,7 +9,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types),intent(inout)::V_fct,V_social
     integer,intent(in)::v_l    
     double precision,intent(out)::mean_N,social_output,private_output
-    double precision,dimension(2*P_max-1,3,P_max,unobs_types),intent(out)::joint_pr
+    double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types),intent(inout)::joint_pr
     double precision,dimension(3,unobs_types)::pr_n_u,pr_n_u_old
     double precision,dimension(2*P_max-1,2,P_max,types_a,unobs_types)::CCP_old,CCP2
     double precision,dimension(villages)::village_fe
@@ -20,12 +20,12 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     character::pause_k
     
     Mean_N_old=0.0d0
-    rho=params(3)
-    village_fe(1:villages)=0.0d0!params(2:4)
+    rho=params(par)
+    village_fe(1:villages)=-9.0d0
     
     !Compute expected productivity 
     do a_l=1,types_a;do u_l=1,unobs_types
-        call expected_productivity((/params(2),params(1)/),area(a_l),Ef_v(:,:,:,a_l,v_l,u_l),v_l,u_l) !Ef_v(1,2,7,1,1,:)
+        call expected_productivity((/params(2),params(1)/),area(a_l),Ef_v(:,:,:,a_l,v_l,u_l),v_l,u_l) !Ef_v(1,:,1,1,1,:)
         !if ( a_l==2 .and. u_l==3) then
         !    print*,'Type',u_l,a_l
         !    print*, 'private return',(ef_v(4,2,8,a_l,v_l,u_l))/(1.0d0-beta*(1.0d0-pi_f_v(1,2,1,v_l,u_l)))-c_s-c_d/(1-PI_s(1,v_l))
@@ -44,7 +44,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     1 n_initial=1
     call generate_beliefs(CCP,V_fct,V_social,Ef_v(:,:,:,:,v_l,:),n_initial,F,v_l,iterations,mean_N,social_output,private_output,joint_pr) 
     do u_l=1,unobs_types;do n_l=1,3
-        pr_n_u(n_l,u_l)=sum(joint_pr(:,n_l,:,u_l))/sum(joint_pr(:,:,:,u_l))
+        pr_n_u(n_l,u_l)=sum(joint_pr(:,n_l,:,:,u_l))/sum(joint_pr(:,:,:,:,u_l))
     end do;end do
     
     !For each plot type obtain a new CCP given beliefs
@@ -57,7 +57,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
         call value_fct_it(Ef_v(1:2*P_l-1,:,P_l,a_l,v_l,u_l)& !Ef_v(1:2*P_l-1,2,P_l,a_l,v_l,:)
                             ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,u_l) &
                             ,P_l &
-                            ,CCP(1:2*P_l-1,:,P_l,a_l,u_l),v_l,u_l & !CCP(1:2*P_l-1,:,P_l,a_l,:)
+                            ,CCP(1:2*P_l-1,:,P_l,a_l,u_l),v_l,u_l & !CCP(1,:,1,2,:)
                             ,V_fct(1:2*P_l-1,:,P_l,a_l,u_l)) !V_fct(1:2*P_l-1,:,P_l,a_l,:)
         social=0
         call policy_fct_it(Ef_v(1:2*P_l-1,:,P_l,a_l,v_l,u_l)&

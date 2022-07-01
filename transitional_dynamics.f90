@@ -20,14 +20,14 @@ subroutine transitional_dynamics(params_MLE)
     t_l=1
     CCP_true(:,:,:,:,v_l,:,t_l)=0.07d0
     call compute_eq_F_CCP(params_MLE,F_in(:,:,:,:,:,:,t_l),CCP_true(:,:,:,:,v_l,:,t_l),V_fct(:,:,:,:,:,t_l),V_fct2(:,:,:,:,:,t_l),n_dist(:,t_l),v_l,&
-                                                mean_N(t_l),social_output(t_l),private_output(t_l),Pr_u_X(:,:,:,v_l,:))
+                                                mean_N(t_l),social_output(t_l),private_output(t_l),Pr_u_X(:,:,:,:,v_l,:))
     print*,'NPV at begining',social_output(t_l)
     
     tau=c_e
     t_l=T
     CCP_true(:,:,:,:,v_l,:,t_l)=0.07d0
     call compute_eq_F_CCP(params_MLE,F_in(:,:,:,:,:,:,t_l),CCP_true(:,:,:,:,v_l,:,t_l),V_fct(:,:,:,:,:,t_l),V_fct2(:,:,:,:,:,t_l),n_dist(:,t_l),v_l,&
-                                                mean_N(t_l),social_output(t_l),private_output(t_l),Pr_u_X(:,:,:,v_l,:))
+                                                mean_N(t_l),social_output(t_l),private_output(t_l),Pr_u_X(:,:,:,:,v_l,:))
     print*,'NPV at end',social_output(t_l)
     
     !Initial guess of beliefs

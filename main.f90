@@ -3,7 +3,7 @@ use dimensions; use cadastral_maps; use simulation
 implicit none
 integer(8),dimension(1)::seed=321
 double precision,dimension(par)::params_true,params_MLE
-double precision,dimension(2*P_max-1,3,P_max,villages,unobs_types)::empty=-9.0d0
+double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::empty=-9.0d0
 double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,villages,unobs_types)::F_true
     double precision,dimension(2*P_max-1,2,P_max,types_a,villages,unobs_types)::CCP_true
     double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types)::V_fct,V_social
@@ -57,7 +57,7 @@ call load_estimation_data()
 !
 !print*,'end simulation'
 !Compute moments in the data
-call compute_moments(dble(drilling_it(:,:,1)),"data",empty)
+call compute_moments(dble(drilling_it(:,:,1)),"data",empty,moment_own_nxa_data)
 
 print*,'Start estimation'
 !Generate a random CCP for computing initial beliefs
@@ -66,7 +66,7 @@ do P_l=1,P_max
     CCP_est(1:2*P_l-1,1:2,P_l,:,:,1)=0.07d0
 end do
 
-!call estimation2(params_MLE,log_likeli)
+call estimation2(params_MLE,log_likeli)
 
 !if (ns==1) then
 !open(unit=12, file=path_results//"parameters_sim.txt")

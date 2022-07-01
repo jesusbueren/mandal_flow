@@ -3,7 +3,7 @@ subroutine load_cadastral_maps()
     implicit none
     character(LEN=1)::s_c1
     character(LEN=2)::s_c2
-    integer::v_l,i,j,ind,a_l,i_l,j2,ind2,s_l
+    integer::v_l,i,j,ind,a_l,j2,ind2,s_l
     double precision::u,u_m
     double precision,dimension(villages,plots_in_map)::areas
     integer,dimension(villages,plots_in_map)::area_type
@@ -110,24 +110,24 @@ subroutine load_cadastral_maps()
 
     !Generate permanent unobserved heterogeneity type
     counter_type=0
-    do s_l=1,sims;do v_l=1,villages;do i_l=1,plots_v(v_l)
+    do s_l=1,sims;do v_l=1,villages;do i=1,plots_v(v_l)
         call RANDOM_NUMBER(u_m)
         if (u_m<pr_unobs_t(1)) then
-            unobs_types_i(i_l,v_l,s_l)=1
+            unobs_types_i(i,v_l,s_l)=1
         elseif (u_m<sum(pr_unobs_t(1:2))) then
-            unobs_types_i(i_l,v_l,s_l)=2
+            unobs_types_i(i,v_l,s_l)=2
         else
-            unobs_types_i(i_l,v_l,s_l)=3
+            unobs_types_i(i,v_l,s_l)=3
         end if
-        counter_type(PA_type(i_l,1,v_l),PA_type(i_l,2,v_l),v_l,unobs_types_i(i_l,v_l,s_l))=counter_type(PA_type(i_l,1,v_l),PA_type(i_l,2,v_l),v_l,unobs_types_i(i_l,v_l,s_l))+1
+        counter_type(PA_type(i,1,v_l),PA_type(i,2,v_l),v_l,unobs_types_i(i,v_l,s_l))=counter_type(PA_type(i,1,v_l),PA_type(i,2,v_l),v_l,unobs_types_i(i,v_l,s_l))+1
     end do;end do;end do
-    
+ 
     !print*,dble(counter_type(6,:,11,:))/dble(sum(counter_type(3,1,1,:)))
-    
     call simulate_spatial_correlation()
+    
     counter_type=0
-    do s_l=1,sims;do v_l=1,villages;do i_l=1,plots_v(v_l)
-        counter_type(PA_type(i_l,1,v_l),PA_type(i_l,2,v_l),v_l,unobs_types_i(i_l,v_l,s_l))=counter_type(PA_type(i_l,1,v_l),PA_type(i_l,2,v_l),v_l,unobs_types_i(i_l,v_l,s_l))+1
+    do s_l=1,sims;do v_l=1,villages;do i=1,plots_v(v_l)
+        counter_type(PA_type(i,1,v_l),PA_type(i,2,v_l),v_l,unobs_types_i(i,v_l,s_l))=counter_type(PA_type(i,1,v_l),PA_type(i,2,v_l),v_l,unobs_types_i(i,v_l,s_l))+1
     end do;end do;end do
     
     print*,''

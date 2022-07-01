@@ -24,7 +24,7 @@ subroutine counterfactual_2(params_MLE)
     !Estimate the model at mle for producion posterior
     max_mle=99999999.0d0
     params(1)=log(params_MLE(1)/(1.0d0-params_MLE(1)))
-    params(2:3)=log(params_MLE(2:3))
+    params(2:par)=log(params_MLE(2:par))
     !mle=log_likelihood2(params) 
     !
     !open(unit=12, file=path_results//"posterior_type.txt")
@@ -60,7 +60,7 @@ subroutine counterfactual_2(params_MLE)
         n_dist=1
         CCP_true=0.07d0
 
-        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,v_l,:))
+        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:))
         
         !if (p_l==1 .and. v_l==1) then
         !OPEN(UNIT=12, FILE=path_results//"hedonic_reg_data.txt")

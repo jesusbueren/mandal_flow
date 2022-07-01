@@ -1,10 +1,10 @@
-subroutine compute_moments(data_in,string_name,joint_pr)
+subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa)
     use simulation
     implicit none
     double precision,dimension(T_sim,plots_i),intent(in)::data_in
     CHARACTER (LEN=4),intent(in) ::string_name
-    double precision,dimension(2*P_max-1,3,P_max,villages,unobs_types),intent(in)::joint_pr
-    double precision,dimension(types_a,2)::moment_own_nxa
+    double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types),intent(in)::joint_pr
+    double precision,dimension(types_a,2),intent(out)::moment_own_nxa
     double precision,dimension(max_NFW+1)::counter_N,moment_N
     double precision,dimension(types_a,2)::counter_own_nxa
     double precision,dimension(unobs_types,2)::counter_uhe,moment_uhe
@@ -62,7 +62,6 @@ subroutine compute_moments(data_in,string_name,joint_pr)
                         moment_P(P_type(i_l))=(counter_P(P_type(i_l))-1.0)/counter_P(P_type(i_l))*moment_P(P_type(i_l))&
                                                 +1.0d0/counter_P(P_type(i_l))*data_in(t_l,i_l) 
 
-                    
 
                         !Moments across villages
                         counter_v(V_type(i_l))=counter_v(V_type(i_l))+1.0d0
@@ -83,7 +82,7 @@ subroutine compute_moments(data_in,string_name,joint_pr)
                         counter_BigN_n(1,1)=counter_BigN_n(1,1)+1
                         counter_little_n(1)=counter_little_n(1)+1
                         do n_l=1,3
-                            if (isnan(sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),:)))) then
+                            if (isnan(sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),:,V_type(i_l),:)))) then
                                 print*,''
                             end if
                             
@@ -103,11 +102,11 @@ subroutine compute_moments(data_in,string_name,joint_pr)
                             !print*,'pr(N|n)',joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),1)/sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),1))*sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),:),1)/sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),:)))
                             end if
                             moment_BigN_n(:,n_l)=(counter_BigN_n(1,1)-1.0d0)/counter_BigN_n(1,1)*moment_BigN_n(:,n_l)+1.0d0/counter_BigN_n(1,1)*( &
-                                joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),1)/sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),1))*sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),v_type(i_l),1),1)/sum(sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),v_type(i_l),:),1)) + &
-                                joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),2)/sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),2))*sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),v_type(i_l),2),1)/sum(sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),v_type(i_l),:),1)) + &
-                                joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),3)/sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),V_type(i_l),3))*sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),v_type(i_l),3),1)/sum(sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),v_type(i_l),:),1)))
+                                joint_pr(1:max_NFW+1,n_l,P_type(i_l),A_type(i_l),V_type(i_l),1)/sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),A_type(i_l),V_type(i_l),1))*sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),A_type(i_l),v_type(i_l),1),1)/sum(sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),A_type(i_l),v_type(i_l),:),1)) + &
+                                joint_pr(1:max_NFW+1,n_l,P_type(i_l),A_type(i_l),V_type(i_l),2)/sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),A_type(i_l),V_type(i_l),2))*sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),A_type(i_l),v_type(i_l),2),1)/sum(sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),A_type(i_l),v_type(i_l),:),1)) + &
+                                joint_pr(1:max_NFW+1,n_l,P_type(i_l),A_type(i_l),V_type(i_l),3)/sum(joint_pr(1:max_NFW+1,n_l,P_type(i_l),A_type(i_l),V_type(i_l),3))*sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),A_type(i_l),v_type(i_l),3),1)/sum(sum(joint_pr(1:max_nfw+1,n_l,p_type(i_l),A_type(i_l),v_type(i_l),:),1)))
                             
-                            moment_little_n=(counter_little_n(1)-1.0d0)/counter_little_n(1)*moment_little_n+1.0d0/counter_little_n(1)*sum(sum(joint_pr(1:max_nfw+1,:,p_type(i_l),v_type(i_l),:),1),2)/sum(joint_pr(1:max_nfw+1,:,p_type(i_l),v_type(i_l),:))
+                            moment_little_n=(counter_little_n(1)-1.0d0)/counter_little_n(1)*moment_little_n+1.0d0/counter_little_n(1)*sum(sum(joint_pr(1:max_nfw+1,:,p_type(i_l),A_type(i_l),v_type(i_l),:),1),2)/sum(joint_pr(1:max_nfw+1,:,p_type(i_l),A_type(i_l),v_type(i_l),:))
 
                         end do
                     end if

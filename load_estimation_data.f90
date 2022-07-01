@@ -21,8 +21,11 @@ subroutine load_estimation_data
     
 
     A_type=data_csv(3,1,:)
+
     n_data=data_csv(4,:,:)+1
+
     Pr_N_data=data_csv(5:15,:,:)
+
     UHE_type=1.0d0/dble(unobs_types)
     drilling_it(:,:,1)=data_csv(19,:,:) 
     impute_i=data_csv(20,1,:)
@@ -31,7 +34,7 @@ subroutine load_estimation_data
     print*,'no zombie in estimation data'
     impute_i=can_be_zombie_i
     
-    can_be_zombie_i=0
+    !can_be_zombie_i=0
     impute_i=can_be_zombie_i
     
 
