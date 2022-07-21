@@ -9,6 +9,8 @@ subroutine generate_panel_sample(params_MLE)
     double precision,dimension(villages)::mean_N,social_output,private_output
     integer::v_l,it
     character::end_key
+    double precision,dimension(types_a,2)::pr_d_a_n
+    double precision,dimension(2*P_max-1,3)::pr_N_n
     
     rho=7.0d0!params_MLE(4)
     v_l=1
@@ -16,7 +18,7 @@ subroutine generate_panel_sample(params_MLE)
     n_dist(:,v_l)=1
     V_fct=0.0d0
     V_social=0.0d0
-    call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:))
+    call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n)
     
     
 end subroutine

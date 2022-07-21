@@ -2,12 +2,13 @@ subroutine load_estimation_data
     use simulation
     implicit none
     double precision,dimension(22,T_sim,plots_i)::data_csv
-    integer::i_l,t_l
+    integer::i_l,t_l,n_l,a_l
     double precision,dimension(types_a)::moment_a
     double precision,dimension(max_NFW+1)::moment_N
     double precision,dimension(2)::moment_own_n
     double precision,dimension(unobs_types)::moment_uhe
     double precision,dimension(P_max)::moment_P
+    
         
     
     OPEN(UNIT=12, FILE=path_estimation//"drill_export_r.csv")
@@ -51,5 +52,21 @@ subroutine load_estimation_data
         modal_N(t_l,i_l)=maxloc(Pr_N_data(:,t_l,i_l),1)-(n_data(t_l,i_l)-1) !MNF(t_l,i_l)-(n_data(t_l,i_l)-1)!
     end do;end do
     N_bar=dble(sum(modal_N,1))/dble(T_sim)
+    
+    
+    shares_n_a_v=0.0d0
+    do i_l=1,plots_i;do t_l=1,T_sim
+        shares_n_a_v(A_type(i_l),n_data(t_l,i_l),V_type(i_l))=shares_n_a_v(A_type(i_l),n_data(t_l,i_l),V_type(i_l))+1.0d0
+    end do;end do
+    
+    do n_l=1,3
+        shares_v_n(:,n_l)=sum(shares_n_a_v(:,n_l,:),1)/sum(shares_n_a_v(:,n_l,:))
+    end do
+    
+    
+    do n_l=1,2;do a_l=1,types_a
+        shares_n_a_v(a_l,n_l,:)=shares_n_a_v(a_l,n_l,:)/sum(shares_n_a_v(a_l,n_l,:))   
+    end do;end do
+    
 
 end subroutine

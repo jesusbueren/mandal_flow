@@ -34,9 +34,9 @@ subroutine estimation2(params_MLE,log_likeli)
     
     max_mle=99999999.0d0
     
-    p_g(1,1)=0.4d0 
-    p_g(1,2:par-1)=10.68d0
-    p_g(1,par)=3.86d0
+    p_g(1,1)=0.58d0 
+    p_g(1,2:par-1)=13.4d0
+    p_g(1,par)=1.18d0
 
 
     do p_l=2,par+1
@@ -82,7 +82,7 @@ function log_likelihood2(params_MLE)
     double precision,dimension(par)::params
     double precision,dimension(2*P_max-1,2,P_max,types_a,villages,unobs_types)::CCP,CCP_opt   !CCP(1,2,1,1,1,:)
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::V_fct,V_social
-    integer::i_l,t_l,type_l,a_l,p_l,v_l,ind,u_l,j_l,s_l,t,missing_x1,j_l2,ind2
+    integer::i_l,t_l,type_l,a_l,p_l,v_l,ind,u_l,j_l,s_l,t,missing_x1,j_l2,ind2,n_l
     double precision::log_likelihood2,pr_non_zombie_II
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::Ef_v 
     double precision,dimension(unobs_types)::likelihood_i,likelihood_it,P_N2_N1,P_BigN2_BigN1
@@ -98,6 +98,12 @@ function log_likelihood2(params_MLE)
     double precision,dimension(villages)::mean_N,social_output,private_output
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::joint_pr
     double precision,dimension(unobs_types)::expost_types
+    double precision,dimension(types_a,2,villages)::pr_d_a_n
+    double precision,dimension(types_a,2)::pr_d_a_n_av
+    double precision,dimension(types_a,2)::pr_d_a_av
+    double precision::fraction_constrained=0.7d0
+    double precision,dimension(2*P_max-1,3,villages)::pr_N_n_v
+    double precision,dimension(2*P_max-1,3)::pr_N_n_av
     
     params(1)=1.0d0/(1.0d0 + exp(-params_MLE(1))) 
     params(2:par)=exp(params_MLE(2:par))
@@ -115,11 +121,11 @@ function log_likelihood2(params_MLE)
     CCP=0.07d0
     joint_pr=0.0d0   
     
-    !$omp parallel default(private) shared(params,f,ccp,v_fct,v_social,n_dist,v_l,mean_n,social_output,private_output,joint_pr)
+    !$omp parallel default(private) shared(params,f,ccp,v_fct,v_social,n_dist,v_l,mean_n,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n_v)
     !$omp  do
-    do v_l=1,villages
+    do v_l=1,1!villages
         print*,'village',v_l
-        call compute_eq_f_ccp(params,f(:,:,:,:,:,v_l,:),ccp(:,:,:,:,v_l,:),v_fct(:,:,:,:,v_l,:),v_social(:,:,:,:,v_l,:),n_dist(:,v_l),v_l,mean_n(v_l),social_output(v_l),private_output(v_l),joint_pr(:,:,:,:,v_l,:))
+        call compute_eq_f_ccp(params,f(:,:,:,:,:,v_l,:),ccp(:,:,:,:,v_l,:),v_fct(:,:,:,:,v_l,:),v_social(:,:,:,:,v_l,:),n_dist(:,v_l),v_l,mean_n(v_l),social_output(v_l),private_output(v_l),joint_pr(:,:,:,:,v_l,:),pr_d_a_n(:,:,v_l),pr_N_n_v(:,:,v_l))
     end do
     !$omp end do  
     !$omp end parallel 
@@ -128,11 +134,12 @@ function log_likelihood2(params_MLE)
     !open(unit=12, file=path_results//"results.txt")
     !    read(12,*),F,CCP,joint_pr
     !close(12)
-    !do v_l=1,villages
-    !    f(:,:,:,:,:,v_l,:)=f(:,:,:,:,:,1,:)
-    !    ccp(:,:,:,:,v_l,:)=ccp(:,:,:,:,1,:)
-    !    joint_pr(:,:,:,:,v_l,:)=joint_pr(:,:,:,:,1,:)
-    !end do
+    do v_l=1,villages
+        f(:,:,:,:,:,v_l,:)=f(:,:,:,:,:,1,:)
+        ccp(:,:,:,:,v_l,:)=ccp(:,:,:,:,1,:)
+        joint_pr(:,:,:,:,v_l,:)=joint_pr(:,:,:,:,1,:)
+        pr_N_n_v(:,:,v_l)=pr_N_n_v(:,:,1)
+    end do
     pr_non_zombie_II=1.0d0
 
 
@@ -317,7 +324,21 @@ function log_likelihood2(params_MLE)
     log_likelihood2=-log_likelihood2
     
     call compute_moments(av_CCP_it,"modl",joint_pr,moment_own_nxa_model)
-    log_likelihood2=sum((moment_own_nxa_model-moment_own_nxa_data)**2.0d0)
+    
+    do n_l=1,2;do a_l=1,types_a
+        pr_d_a_n_av(a_l,n_l)=sum(pr_d_a_n(a_l,n_l,:)*shares_n_a_v(a_l,n_l,:))
+    end do;end do
+    do n_l=1,3;do ind=1,2*P_max-1
+        pr_N_n_av(ind,n_l)=sum(pr_N_n_v(ind,n_l,:)*shares_v_n(:,n_l)) 
+    end do;end do
+
+    log_likelihood2=sum((pr_d_a_n_av-moment_own_nxa_data)**2.0d0)+sum((pr_N_n_av(1:max_NFW+1,:)-pr_N_n_data(1:max_NFW+1,:))**2.0d0)
+
+    
+    
+    OPEN(UNIT=12, FILE=path_results//"modl"//"_own_nxa2.txt")
+        write(12,*),pr_d_a_n_av
+    close(12)
 
     
     !GMM

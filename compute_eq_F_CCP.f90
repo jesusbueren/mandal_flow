@@ -1,4 +1,4 @@
-subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,social_output,private_output,joint_pr)
+subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n)
     use cadastral_maps; use dimensions; use primitives
     implicit none
     double precision,dimension(par),intent(in)::params
@@ -17,6 +17,8 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     double precision::dist,Mean_N_old
     integer::p_l,a_l,n_l,P_l2,ind,counter_all,counter_bad,u_l,it
     integer(8),dimension(2*P_max-1,3,3,P_max,unobs_types)::iterations
+    double precision,dimension(types_a,2),intent(out)::pr_d_a_n
+    double precision,dimension(2*P_max-1,3),intent(out)::pr_N_n
     character::pause_k
     
     Mean_N_old=0.0d0
@@ -42,7 +44,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     pr_n_u_old=0.0d0
     n_start=n_initial
     1 n_initial=1
-    call generate_beliefs(CCP,V_fct,V_social,Ef_v(:,:,:,:,v_l,:),n_initial,F,v_l,iterations,mean_N,social_output,private_output,joint_pr) 
+    call generate_beliefs(CCP,V_fct,V_social,Ef_v(:,:,:,:,v_l,:),n_initial,F,v_l,iterations,mean_N,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n) 
     do u_l=1,unobs_types;do n_l=1,3
         pr_n_u(n_l,u_l)=sum(joint_pr(:,n_l,:,:,u_l))/sum(joint_pr(:,:,:,:,u_l))
     end do;end do
@@ -112,7 +114,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     !read*,pause_k
     it=it+1
     if ((dist>1.0d-3.and. it<10) .or. it==1) then !1.0d-4 
-        go to 1 
+       ! go to 1 
     end if
     
     if (it==10 .and. dist>1.0d-3) then

@@ -13,6 +13,8 @@ subroutine counterfactual_2(params_MLE)
     integer,parameter::nkk=20
     double precision,dimension(nkk)::tau_grid
     double precision,dimension(plots_i,unobs_types)::posterior_type
+    double precision,dimension(types_a,2)::pr_d_a_n
+    double precision,dimension(2*P_max-1,3)::Pr_N_n
      interface 
         function log_likelihood2(params_MLE)
             use dimensions
@@ -60,8 +62,9 @@ subroutine counterfactual_2(params_MLE)
         n_dist=1
         CCP_true=0.07d0
 
-        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:))
-        
+        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n)
+        print*,'paused'
+        read*,end_key
         !if (p_l==1 .and. v_l==1) then
         !OPEN(UNIT=12, FILE=path_results//"hedonic_reg_data.txt")
         !do i_l=1,plots_i

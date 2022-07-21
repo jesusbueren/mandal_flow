@@ -175,10 +175,13 @@ subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa)
         OPEN(UNIT=12, FILE=path_results//"counter_all_N.txt")
             write(12,*),counter_N2/sum(counter_N2)
         close(12)
+
         
         OPEN(UNIT=12, FILE=path_results//string_name//"_BigN_n.txt")
+        pr_N_n_data=0.0d0
         do n_l=1,3
             write(12,*),counter_BigN_n(:,n_l)/sum(counter_BigN_n(:,n_l))
+            pr_N_n_data(1:max_NFW+1,n_l)=counter_BigN_n(1:max_NFW+1,n_l)/sum(counter_BigN_n(1:max_NFW+1,n_l))
         end do
         close(12)
         

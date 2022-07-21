@@ -42,7 +42,7 @@ subroutine policy_fct_it(Ef_v,F,P,CCP_in,CCP_out,v_l,u_l,V_new,a_l)
         print*,'problem in policy fct it: ',P,v_l,u_l
         dist=1000
         CCP_out=CCP_old
-        read*,pause_k
+        !read*,pause_k
     end if
     
     if (it>1000) then
