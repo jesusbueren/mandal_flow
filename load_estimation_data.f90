@@ -1,8 +1,8 @@
 subroutine load_estimation_data
     use simulation
     implicit none
-    double precision,dimension(22,T_sim,plots_i)::data_csv
-    integer::i_l,t_l,n_l,a_l
+    double precision,dimension(24,T_sim,plots_i)::data_csv
+    integer::i_l,t_l,n_l,a_l,q_l
     double precision,dimension(types_a)::moment_a
     double precision,dimension(max_NFW+1)::moment_N
     double precision,dimension(2)::moment_own_n
@@ -19,6 +19,8 @@ subroutine load_estimation_data
     V_type=data_csv(1,1,:)
     
     P_type=data_csv(2,1,:)
+    wealth_i=data_csv(23,1,:)
+    wealth_q=data_csv(24,:,:)
     
 
     A_type=data_csv(3,1,:)
@@ -36,7 +38,7 @@ subroutine load_estimation_data
     impute_i=can_be_zombie_i
     
     !can_be_zombie_i=0
-    impute_i=can_be_zombie_i
+    impute_i=0
     
 
 
@@ -55,13 +57,19 @@ subroutine load_estimation_data
     
     
     shares_n_a_v=0.0d0
+    shares_w_v=0.0d0
     do i_l=1,plots_i;do t_l=1,T_sim
         shares_n_a_v(A_type(i_l),n_data(t_l,i_l),V_type(i_l))=shares_n_a_v(A_type(i_l),n_data(t_l,i_l),V_type(i_l))+1.0d0
+        if (n_data(t_l,i_l)==1) then
+            shares_w_v(A_type(i_l),V_type(i_l),wealth_q(t_l,i_l))=shares_w_v(A_type(i_l),V_type(i_l),wealth_q(t_l,i_l))+1.0d0
+        end if            
     end do;end do
     
-    do n_l=1,3
-        shares_v_n(:,n_l)=sum(shares_n_a_v(:,n_l,:),1)/sum(shares_n_a_v(:,n_l,:))
-    end do
+    shares_v_n=sum(sum(shares_n_a_v(:,:,:),2),1)/sum(shares_n_a_v(:,:,:))
+    
+    do q_l=1,wealth_quantiles
+        shares_w_v(:,:,q_l)=shares_w_v(:,:,q_l)/sum(shares_w_v(:,:,q_l)) !shares_w_v(:,:,1)
+    end do 
     
     
     do n_l=1,2;do a_l=1,types_a

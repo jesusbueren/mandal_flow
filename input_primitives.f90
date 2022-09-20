@@ -42,8 +42,8 @@ subroutine input_primitives()
         PI_s(:,v_l)=PI_s(1,v_l)       
     
         !Discharge pr. depends of moonsoon and in number of wells in the adjacency
-        PI_k(:,:,1,v_l,u_l)=transpose(flow_fail_prob_csv(6:10,v_l,1,u_l,1:2*P_max)) !transpose(flow_fail_prob_csv(4:8,u_l,1,1:2*P_max)) 
-        PI_k(:,:,2,v_l,u_l)=transpose(flow_fail_prob_csv(6:10,v_l,2,u_l,1:2*P_max))!transpose(flow_fail_prob_csv(4:8,u_l,2,1:2*P_max))
+        PI_k(:,:,1,v_l,u_l)=transpose(flow_fail_prob_csv(6:10,v_l,1,u_l,1:2*P_max))
+        PI_k(:,:,2,v_l,u_l)=transpose(flow_fail_prob_csv(6:10,v_l,2,u_l,1:2*P_max))
 
         !PI_k(:,1,1,v_l)
 

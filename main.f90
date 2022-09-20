@@ -20,11 +20,14 @@ call random_seed(PUT=seed)
 !Input primitives of the model
 call input_primitives()
 
-!Create a map with plots, neighbors and types
-call load_cadastral_maps()
-
 !Load panel data of drilling decisions
 call load_estimation_data()
+
+!Create a map with plots, neighbors and types
+!call load_cadastral_maps()
+
+
+
 
 !Uncomment if you want to simulate and check recovery of the simulated parameters.
     !Choose true parameter vector and compute associated equilibrium beliefs and a final distribution of wells in all plots
@@ -57,7 +60,13 @@ call load_estimation_data()
 !
 !print*,'end simulation'
 !Compute moments in the data
-call compute_moments(dble(drilling_it(:,:,1)),"data",empty,moment_own_nxa_data)
+call compute_moments(dble(drilling_it(:,:,1)),"data",empty,moment_own_nxa_data,moment_w_data)
+OPEN(UNIT=12, FILE=path_results//"data"//"_own_nxa.txt")
+    write(12,*),moment_own_nxa_data
+close(12)
+OPEN(UNIT=12, FILE=path_results//"data"//"_wealth.txt")
+    write(12,*),moment_w_data
+close(12)
 
 print*,'Start estimation'
 !Generate a random CCP for computing initial beliefs
@@ -66,7 +75,7 @@ do P_l=1,P_max
     CCP_est(1:2*P_l-1,1:2,P_l,:,:,1)=0.07d0
 end do
 
-call estimation2(params_MLE,log_likeli)
+!call estimation2(params_MLE,log_likeli)
 
 !if (ns==1) then
 !open(unit=12, file=path_results//"parameters_sim.txt")
@@ -79,7 +88,7 @@ call estimation2(params_MLE,log_likeli)
 !end if
 
 open(unit=12, file=path_results//"parameters.txt")
-    read(12,'(<par>f20.12,f20.12)'),params_MLE
+    read(12,'(<par>f20.12)'),params_MLE
 close(12)
 
 

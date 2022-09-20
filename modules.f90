@@ -1,23 +1,23 @@
 module dimensions
     implicit none
     integer,parameter::P_max=8 ! Set the maximum number of plots in an adjacency
-    integer,parameter::K=5,par=4,M=2,COV=4,types_a=4 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
-    integer,parameter::sims=10
+    integer,parameter::K=5,par=5,M=2,COV=4,types_a=4 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
+    integer,parameter::sims=20,Reps=20
 end
     
 module cadastral_maps
     use dimensions
     implicit none
     double precision:: rho_sc=0.9d0
-    integer,parameter::plots_in_map=1909,villages=14,unobs_types=3
+    integer,parameter::plots_in_map=1909,villages=14,unobs_types=3,wealth_quantiles=4
     integer,parameter,dimension(villages)::plots_v=(/1794,302,912,517,292,535,939,637,405,837,973,1844,443,1909/) !plots in each village
     double precision,dimension(villages):: mean_area
     integer,dimension(plots_in_map,plots_in_map,villages)::neighbors_map
-    integer,dimension(plots_in_map,2,villages)::PA_type !number of neighbors, a type for each plot in the map
+    integer,dimension(plots_in_map,2,villages,sims)::PA_type !number of neighbors, a type for each plot in the map
     integer,dimension(plots_in_map,villages,sims)::unobs_types_i
-    integer,dimension(plots_in_map,P_max,villages)::neighbors !identify neighbors for each plot in the map
+    integer,dimension(plots_in_map,P_max,villages,sims)::neighbors !identify neighbors for each plot in the map
     !Zombie pr
-    double precision,dimension(villages):: pr_non_zombie=1.0d0!(/0.454545468,0.954918027,0.525423706,0.778947353,0.805970132,0.632911384,0.666666687,0.847826064,0.762162149,0.749077499,0.401544392,0.722857118,0.78772378,0.639024377/)
+    double precision,dimension(types_a):: pr_non_zombie=0.50d0
     integer,dimension(plots_in_map,villages,sims)::active_plots
     character(len=92)::file_map="C:\Users\jbueren\Google Drive\overdrilling\fortran\mandal_flow\cadastral_maps\fortran_files\"
     end
@@ -74,19 +74,22 @@ use cadastral_maps
     
     !Data
     integer,dimension(plots_i)::V_type,P_type,A_type,impute_i,can_be_zombie_i
+    double precision,dimension(plots_i)::wealth_i
     double precision,dimension(unobs_types,plots_i)::UHE_type
     double precision,dimension(unobs_types,plots_i)::UHE_type_model
     integer,dimension(plots_i)::modal_UHE_type
     integer,dimension(T_sim,plots_i,simulations)::drilling_it
-    integer,dimension(T_sim,plots_i)::n_data !number of wells in reference plot
+    integer,dimension(T_sim,plots_i)::n_data,wealth_q !number of wells in reference plot
     double precision,dimension(max_NFW+1,T_sim,plots_i)::Pr_N_data !pr of number of functioning wells in the adjacency
     integer,dimension(T_sim,plots_i)::MNF
     integer,dimension(T_sim,plots_i)::modal_N !pr of number of functioning wells in the adjacency
     double precision,dimension(plots_i)::N_bar
     double precision,dimension(types_a,2)::moment_own_nxa_data
+    double precision,dimension(wealth_quantiles)::moment_w_data
     double precision,dimension(types_a,3,villages)::shares_n_a_v
-    double precision,dimension(villages,3)::shares_v_n
-    double precision,dimension(2*P_max-1,3)::pr_N_n_data
+    double precision,dimension(types_a,villages,wealth_quantiles)::shares_w_v
+    double precision,dimension(villages)::shares_v_n
+    double precision,dimension(2*P_max-1)::pr_N_n_data
     
     !Unobsverded heterogeneity from beliefs
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::Pr_u_X

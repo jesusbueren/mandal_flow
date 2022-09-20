@@ -15,26 +15,26 @@ subroutine counterfactual_2(params_MLE)
     double precision,dimension(plots_i,unobs_types)::posterior_type
     double precision,dimension(types_a,2)::pr_d_a_n
     double precision,dimension(2*P_max-1,3)::Pr_N_n
+    double precision,dimension(plots_i):: pr_non_zombie_i
+    double precision,dimension(types_a)::pr_non_zombie_a
+    integer,dimension(types_a)::counter_a
      interface 
         function log_likelihood2(params_MLE)
             use dimensions
             double precision,dimension(par),intent(in)::params_MLE
             double precision::log_likelihood2
         end function log_likelihood2
-    end interface
+     end interface
     
-    !Estimate the model at mle for producion posterior
-    max_mle=99999999.0d0
-    params(1)=log(params_MLE(1)/(1.0d0-params_MLE(1)))
-    params(2:par)=log(params_MLE(2:par))
-    !mle=log_likelihood2(params) 
-    !
-    !open(unit=12, file=path_results//"posterior_type.txt")
-    !    read(12,*),posterior_type
-    !close(12)
+     do i_l=1,plots_i
+        pr_non_zombie_i(i_l)=1.0d0/(1.0d0+exp(-(params_MLE(4)+params_MLE(5)*wealth_i(i_l))))
+        counter_a(A_type(i_l))=counter_a(A_type(i_l))+1
+        pr_non_zombie_a(A_type(i_l))=pr_non_zombie_a(A_type(i_l))+pr_non_zombie_i(i_l)
+    end do
     
-
-    print*,'p2',params_MLE
+    pr_non_zombie=pr_non_zombie_a/dble(counter_a)
+     call load_cadastral_maps()
+    
     tau_grid(1)=0.0d0
     do p_l=2,nkk
         tau_grid(p_l)=tau_grid(p_l-1)+1.0d0
@@ -63,26 +63,6 @@ subroutine counterfactual_2(params_MLE)
         CCP_true=0.07d0
 
         call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n)
-        print*,'paused'
-        read*,end_key
-        !if (p_l==1 .and. v_l==1) then
-        !OPEN(UNIT=12, FILE=path_results//"hedonic_reg_data.txt")
-        !do i_l=1,plots_i
-        !    j_l=maxloc(Pr_N_data(:,1,i_l),1) 
-        !    if (n_data(1,i_l)==1) then
-        !        ind=j_l 
-        !    elseif (n_data(1,i_l)==2) then
-        !        ind=j_l-1
-        !    elseif (n_data(1,i_l)==3) then
-        !        ind=j_l-2
-        !    else
-        !        print*,'error in estimation'
-        !    end if
-        !    !apanyo pq no estoy poniendo el true village
-        !     write(12,'(F10.3,I4,F10.3)'),sum(V_fct(ind,n_data(1,i_l),P_type(i_l),A_type(i_l),:)*posterior_type(i_l,:)),n_data(1,i_l),area(A_type(i_l))
-        !end do
-        !close(12)
-        !end if
         
         if (p_l==1 .and. v_l==1) then
             OPEN(UNIT=12, FILE=path_results//"counterfactuals_noimp_ts.txt")

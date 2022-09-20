@@ -1,12 +1,14 @@
-subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa)
+subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa,moment_w)
     use simulation
     implicit none
     double precision,dimension(T_sim,plots_i),intent(in)::data_in
     CHARACTER (LEN=4),intent(in) ::string_name
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types),intent(in)::joint_pr
     double precision,dimension(types_a,2),intent(out)::moment_own_nxa
+    double precision,dimension(wealth_quantiles),intent(out)::moment_w
     double precision,dimension(max_NFW+1)::counter_N,moment_N
     double precision,dimension(types_a,2)::counter_own_nxa
+    double precision,dimension(wealth_quantiles)::counter_w
     double precision,dimension(unobs_types,2)::counter_uhe,moment_uhe
     double precision,dimension(P_max)::counter_P,moment_P
     double precision,dimension(villages)::counter_v,moment_v
@@ -21,6 +23,8 @@ subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa)
     counter_N=0.0d0
     moment_N=0.0d0
     counter_own_nxa=0.0d0
+    counter_w=0.0d0
+    moment_w=0.0d0
     moment_own_nxa=0.0d0
     counter_uhe=0.0d0
     moment_uhe=0.0d0
@@ -49,6 +53,13 @@ subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa)
                     counter_own_nxa(A_type(i_l),n_data(t_l,i_l))=counter_own_nxa(A_type(i_l),n_data(t_l,i_l))+1.0d0
                     moment_own_nxa(A_type(i_l),n_data(t_l,i_l))=(counter_own_nxa(A_type(i_l),n_data(t_l,i_l))-1.0)/counter_own_nxa(A_type(i_l),n_data(t_l,i_l))*moment_own_nxa(A_type(i_l),n_data(t_l,i_l))&
                                                     +1.0d0/counter_own_nxa(A_type(i_l),n_data(t_l,i_l))*data_in(t_l,i_l)
+                    
+                    !Moments across wealth
+                    if (n_data(t_l,i_l)==1) then
+                        counter_w(wealth_q(t_l,i_l))=counter_w(wealth_q(t_l,i_l))+1.0d0
+                        moment_w(wealth_q(t_l,i_l))=(counter_w(wealth_q(t_l,i_l))-1.0)/counter_w(wealth_q(t_l,i_l))*moment_w(wealth_q(t_l,i_l)) &
+                                                        +1.0d0/counter_w(wealth_q(t_l,i_l))*data_in(t_l,i_l)
+                    end if
 
                     !Moments across number of unobserved heterogeneity types
                     do u_l=1,unobs_types
@@ -134,6 +145,10 @@ subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa)
         write(12,*),counter_own_nxa
     close(12)
     
+    OPEN(UNIT=12, FILE=path_results//"counter_wealth.txt")
+        write(12,*),counter_w
+    close(12)
+    
     OPEN(UNIT=12, FILE=path_results//string_name//"_uhe.txt")
         write(12,*),moment_uhe/counter_uhe
     close(12)
@@ -179,10 +194,9 @@ subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa)
         
         OPEN(UNIT=12, FILE=path_results//string_name//"_BigN_n.txt")
         pr_N_n_data=0.0d0
-        do n_l=1,3
-            write(12,*),counter_BigN_n(:,n_l)/sum(counter_BigN_n(:,n_l))
-            pr_N_n_data(1:max_NFW+1,n_l)=counter_BigN_n(1:max_NFW+1,n_l)/sum(counter_BigN_n(1:max_NFW+1,n_l))
-        end do
+        write(12,*),sum(counter_BigN_n,2)/sum(counter_BigN_n)
+        pr_N_n_data(1:max_NFW+1)=sum(counter_BigN_n,2)/sum(counter_BigN_n)
+
         close(12)
         
         OPEN(UNIT=12, FILE=path_results//string_name//"_little_n.txt")

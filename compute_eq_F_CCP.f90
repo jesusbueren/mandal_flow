@@ -18,11 +18,11 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     integer::p_l,a_l,n_l,P_l2,ind,counter_all,counter_bad,u_l,it
     integer(8),dimension(2*P_max-1,3,3,P_max,unobs_types)::iterations
     double precision,dimension(types_a,2),intent(out)::pr_d_a_n
-    double precision,dimension(2*P_max-1,3),intent(out)::pr_N_n
+    double precision,dimension(2*P_max-1),intent(out)::pr_N_n
     character::pause_k
     
     Mean_N_old=0.0d0
-    rho=params(par)
+    rho=params(3)
     village_fe(1:villages)=-9.0d0
     
     !Compute expected productivity 
@@ -114,7 +114,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     !read*,pause_k
     it=it+1
     if ((dist>1.0d-3.and. it<10) .or. it==1) then !1.0d-4 
-       ! go to 1 
+        go to 1 
     end if
     
     if (it==10 .and. dist>1.0d-3) then

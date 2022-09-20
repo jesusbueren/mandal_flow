@@ -35,9 +35,9 @@ subroutine simulate_spatial_correlation()
         count_mode_equal_type=0
         do i=1,plots_v(v_l)
             counter_type=0.0d0
-            do j=1,PA_type(i,1,v_l) 
-                if (neighbors(i,j,v_l)/=i) then !neighbors(i,:,v_l)
-                    counter_type(unobs_types_i(neighbors(i,j,v_l),v_l,s_l))=counter_type(unobs_types_i(neighbors(i,j,v_l),v_l,s_l))+1
+            do j=1,PA_type(i,1,v_l,s_l) 
+                if (neighbors(i,j,v_l,s_l)/=i) then !neighbors(i,:,v_l)
+                    counter_type(unobs_types_i(neighbors(i,j,v_l,s_l),v_l,s_l))=counter_type(unobs_types_i(neighbors(i,j,v_l,s_l),v_l,s_l))+1
                 end if
             end do
             if (counter_type(1)==counter_type(2) .and. counter_type(3)==counter_type(2)) then
