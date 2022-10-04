@@ -35,21 +35,22 @@ subroutine estimation2(params_MLE,log_likeli)
     max_mle=99999999.0d0
     
     !Flow p
-    p_g(1,1)=0.56d0 
+    p_g(1,1)=0.47d0 
     !Productivity p
-    p_g(1,2)=11.65d0
+    p_g(1,2)=9.94d0
     !Var taste shock
-    p_g(1,3)=1.49d0
+    p_g(1,3)=2.08d0
     !Intercept
-    p_g(1,4)=-10.79d0
+    p_g(1,4)=-9.06d0
     !Wealth slope
-    p_g(1,5)=0.78d0
+    p_g(1,5)=0.77d0
+
     
 
 
     do p_l=2,par+1
         p_g(p_l,:)=p_g(1,:)
-        p_g(p_l,p_l-1)=p_g(1,p_l-1)*0.9d0
+        p_g(p_l,p_l-1)=p_g(1,p_l-1)*0.8d0
     end do
 
         
@@ -57,8 +58,9 @@ subroutine estimation2(params_MLE,log_likeli)
     do p_l=1,par+1
         p_g(p_l,1)=log(p_g(p_l,1)/(1.0d0-p_g(p_l,1)))
         p_g(p_l,2:3)=log(p_g(p_l,2:3))
+
         y(p_l)=log_likelihood2(p_g(p_l,:))  
-        !read*,pause_k
+        read*,pause_k
     end do 
 
     !print*,'likelihood_ini',y(1)
@@ -68,8 +70,9 @@ subroutine estimation2(params_MLE,log_likeli)
     call amoeba(p_g,y,ftol,log_likelihood2,iter)
     
     log_likeli=y(1)
-    p_g(:,1)=1.0d0/(1.0d0+exp(-p_g(:,1)))
-    p_g(:,2:3)=exp(p_g(:,2:3))
+    p_g(1,1)=1.0d0/(1.0d0+exp(-p_g(1,1)))
+    p_g(1,2:3)=exp(p_g(1,2:3))
+
 
     
     params_MLE=p_g(1,:)
@@ -407,10 +410,11 @@ function log_likelihood2(params_MLE)
         pr_N_n_av(1:max_NFW+1)=0.0d0
     end if
 
-    log_likelihood2=sum((pr_d_a_n_av*pr_non_zombie_an(:,1:2)-moment_own_nxa_data)**2.0d0)+ sum((pr_d_w_av*pr_non_zombie_w-moment_w_data)**2.0d0)
+    log_likelihood2=sum((pr_d_a_n_av*pr_non_zombie_an(:,1:2)-moment_own_nxa_data)**2.0d0)+ sum((pr_d_w_av*pr_non_zombie_w-moment_w_data)**2.0d0)+(pr_N_n_av(1)-pr_N_n_data(1))**2.0d0
     
     if (isnan(log_likelihood2)) then
         print*,'paused in estimation2'
+        print*,pr_N_n_v(1,:)
         read*, end_k
     end if
     

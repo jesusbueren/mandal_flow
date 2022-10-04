@@ -87,7 +87,7 @@ end do
 !close(12)
 !end if
 
-open(unit=12, file=path_results//"parameters.txt")
+open(unit=12, file=path_results//"parameters_new.txt")
     read(12,'(<par>f20.12)'),params_MLE
 close(12)
 

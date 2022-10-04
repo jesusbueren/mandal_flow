@@ -2,7 +2,7 @@ module dimensions
     implicit none
     integer,parameter::P_max=8 ! Set the maximum number of plots in an adjacency
     integer,parameter::K=5,par=5,M=2,COV=4,types_a=4 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
-    integer,parameter::sims=20,Reps=20
+    integer,parameter::sims=20
 end
     
 module cadastral_maps

@@ -13,7 +13,7 @@ subroutine expected_productivity(params,a,Ef_v,v_l,u_l)
     theta_p=params(1)
     beta_p=params(2)
     gamma_p=1.0d0-params(2)
-    cost_p=0.0d0 !params(3)
+    cost_p=0.0d0
     !y=theta*( q^beta * a^gamma)
     Ef_v=sqrt(-1.0d0)
     !Compute expected productivity and generate the vector of it with the from 2*P-1 form
