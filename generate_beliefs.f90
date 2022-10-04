@@ -320,7 +320,7 @@ total_f(:,1)=sum(total_f,2)/sum(total_N,2) !total_f(1,:) total_N(1,:)
     !print*,'Mean N',mean_N
     
     joint_pr=0.0d0
-     do P_l=2,P_max; do u_l=1,unobs_types;do a_l=1,types_a
+     do P_l=1,P_max; do u_l=1,unobs_types;do a_l=1,types_a
          if (sum(counter_u(:,:,P_l,a_l,u_l))==0.0d0)then
              !print*,'got here'
              joint_pr(:,:,P_l,a_l,u_l)=0.0d0
