@@ -15,6 +15,7 @@ subroutine counterfactual_2(params_MLE)
     double precision,dimension(plots_i,unobs_types)::posterior_type
     double precision,dimension(types_a,2)::pr_d_a_n
     double precision,dimension(2*P_max-1,3)::Pr_N_n
+    double precision,dimension(3)::Pr_n
     double precision,dimension(plots_i):: pr_non_zombie_i
     double precision,dimension(types_a)::pr_non_zombie_a
     integer,dimension(types_a)::counter_a
@@ -49,7 +50,7 @@ subroutine counterfactual_2(params_MLE)
     do v_l=1,villages;do p_l=1,nkk
         print*,'exp',p_l
         print*,'village,',v_l 
-        tau=tau_grid(p_l)
+        tau=c_e!tau_grid(p_l)
         if (p_l==1) then
             V_fct=0.0d0
             V_social=0.0d0
@@ -62,7 +63,7 @@ subroutine counterfactual_2(params_MLE)
         n_dist=1
         CCP_true=0.07d0
 
-        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n)
+        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n,pr_n)
         
         if (p_l==1 .and. v_l==1) then
             OPEN(UNIT=12, FILE=path_results//"counterfactuals_noimp_ts.txt")

@@ -114,7 +114,9 @@ function log_likelihood2(params_MLE)
     double precision,dimension(types_a,2)::pr_d_a_av
     double precision::fraction_constrained=0.7d0
     double precision,dimension(2*P_max-1,villages)::pr_N_n_v
+    double precision,dimension(3,villages)::pr_n_v
     double precision,dimension(2*P_max-1)::pr_N_n_av
+    double precision,dimension(3)::pr_n_av
     integer(8),dimension(1)::seed=321
     double precision::u
     double precision,dimension(plots_i):: pr_non_zombie_i
@@ -193,7 +195,8 @@ function log_likelihood2(params_MLE)
     !$omp  do
     do v_l=1,villages
         print*,'village',v_l
-        call compute_eq_f_ccp(params,f(:,:,:,:,:,v_l,:),ccp(:,:,:,:,v_l,:),v_fct(:,:,:,:,v_l,:),v_social(:,:,:,:,v_l,:),n_dist(:,v_l),v_l,mean_n(v_l),social_output(v_l),private_output(v_l),joint_pr(:,:,:,:,v_l,:),pr_d_a_n(:,:,v_l),pr_N_n_v(:,v_l))
+        call compute_eq_f_ccp(params,f(:,:,:,:,:,v_l,:),ccp(:,:,:,:,v_l,:),v_fct(:,:,:,:,v_l,:),v_social(:,:,:,:,v_l,:),n_dist(:,v_l), &
+            v_l,mean_n(v_l),social_output(v_l),private_output(v_l),joint_pr(:,:,:,:,v_l,:),pr_d_a_n(:,:,v_l),pr_N_n_v(:,v_l),pr_n_v(:,v_l))
     end do
     !$omp end do  nowait
     !$omp end parallel 
@@ -207,6 +210,7 @@ function log_likelihood2(params_MLE)
     !    ccp(:,:,:,:,v_l,:)=ccp(:,:,:,:,9,:)
     !    joint_pr(:,:,:,:,v_l,:)=joint_pr(:,:,:,:,9,:)
     !    pr_d_a_n(:,:,v_l)=pr_d_a_n(:,:,9)
+    !    pr_n_v(:,v_l)=pr_n_v(:,9) !pr_n_v(:,1)
     !end do
     pr_non_zombie_II=1.0d0
 
@@ -395,9 +399,17 @@ function log_likelihood2(params_MLE)
     do n_l=1,2;do a_l=1,types_a
         pr_d_a_n_av(a_l,n_l)=sum(pr_d_a_n(a_l,n_l,:)*shares_n_a_v(a_l,n_l,:))
     end do;end do
+    
     do ind=1,2*P_max-1
         pr_N_n_av(ind)=sum(pr_N_n_v(ind,:)*shares_v_n) 
     end do
+    
+    do n_l=1,3
+        pr_n_av(n_l)=sum(pr_n_v(n_l,:)*shares_v_n) 
+    end do
+    
+    pr_n_av=pr_n_av*sum(pr_non_zombie_i(:))/dble(plots_i)
+    pr_n_av(1)=pr_n_av(1)+(1.0d0-sum(pr_non_zombie_i(:))/dble(plots_i))
     
     pr_d_w_av=0.0d0
     do q_l=1,wealth_quantiles
@@ -431,6 +443,10 @@ function log_likelihood2(params_MLE)
     
     OPEN(UNIT=12, FILE=path_results//"modl"//"_BigN_n2.txt")
         write(12,*),pr_N_n_av
+    close(12)
+    
+    OPEN(UNIT=12, FILE=path_results//"modl"//"_n.txt")
+        write(12,*),pr_n_av
     close(12)
 
     
