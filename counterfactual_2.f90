@@ -50,7 +50,8 @@ subroutine counterfactual_2(params_MLE)
     do v_l=1,villages;do p_l=1,nkk
         print*,'exp',p_l
         print*,'village,',v_l 
-        tau=c_e!tau_grid(p_l)
+        tau=tau_grid(p_l)
+        tau_per_N=0.0d0!tau_grid(p_l)
         if (p_l==1) then
             V_fct=0.0d0
             V_social=0.0d0
@@ -66,11 +67,11 @@ subroutine counterfactual_2(params_MLE)
         call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n,pr_n)
         
         if (p_l==1 .and. v_l==1) then
-            OPEN(UNIT=12, FILE=path_results//"counterfactuals_noimp_ts.txt")
+            OPEN(UNIT=12, FILE=path_results//"counterfactuals_new.txt")
             write(12,'(F10.3,I4,F10.3,F10.3,F10.3,F10.3,F10.3)'),tau,v_l,mean_N(v_l),social_output(v_l),private_output(v_l)
             close(12)
         else
-            OPEN(UNIT=12, FILE=path_results//"counterfactuals_noimp_ts.txt",access='append')
+            OPEN(UNIT=12, FILE=path_results//"counterfactuals_new.txt",access='append')
             write(12,'(F10.3,I4,F10.3,F10.3,F10.3,F10.3,F10.3)'),tau,v_l,mean_N(v_l),social_output(v_l),private_output(v_l)
             close(12)
         end if        

@@ -68,7 +68,7 @@ subroutine one_step_value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_old,V_new)
     double precision,dimension(2*P-1,3),intent(in)::V_old
     double precision,dimension(2*P-1,3),intent(out)::V_new
     double precision,dimension((2*P-1)*3)::Vec_old,Vec_new
-    double precision,dimension(2*P-1)::v_00,v_0I,v_10,v_1I
+    double precision,dimension(2*P-1)::v_00,v_0I,v_10,v_1I,vec_N
     double precision,dimension(2*P-1,2),intent(inout)::CCP
     integer::ind
     character::pause_k
@@ -76,6 +76,10 @@ subroutine one_step_value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_old,V_new)
     CCP=max(CCP,1d-18)
     
     V_new=0.0d0
+    
+    do ind=1,2*P-1
+        vec_N(ind)=dble(ind)-1.0d0
+    end do
 
         
             !No well (n=1)
@@ -91,13 +95,13 @@ subroutine one_step_value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_old,V_new)
             !!One well (n=2)
             !!!!!!!!!!!!!!!!!
                 !No attempt
-                v_10(1:2*P-1)=T_g+Ef_v(1:2*P-1,2)-tau &
+                v_10(1:2*P-1)=T_g+Ef_v(1:2*P-1,2)-tau-vec_N*tau_per_N &
                     +beta*((1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l))*matmul(F(1:2*P-1,1:2*P-1,2,2),V_old(1:2*P-1,2))) & !No failure
                     +beta*(PI_f_v(1:2*P-1,2,P,v_l,u_l)*matmul(F(1:2*P-1,1:2*P-1,2,1),V_old(1:2*P-1,1)))  !Failure
 
     
                 !Attempt
-                v_1I(1:2*P-1)=T_g+Ef_v(1:2*P-1,2)-tau &
+                v_1I(1:2*P-1)=T_g+Ef_v(1:2*P-1,2)-tau-vec_N*tau_per_N &
                         -PI_s_v(1:2*P-1,2,P,v_l)*c_s-(1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*c_d &
                         +beta*(PI_s_v(1:2*P-1,2,P,v_l)*(1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l))*matmul(F(1:2*P-1,1:2*P-1,2,3),V_old(1:2*P-1,3))) & !Success in the new and no failure of the old
                         +beta*(PI_s_v(1:2*P-1,2,P,v_l)*PI_f_v(1:2*P-1,2,P,v_l,u_l)+(1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*(1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l)))*matmul(F(1:2*P-1,1:2*P-1,2,2),V_old(1:2*P-1,2)) & ! Success and failure of the old or failure of the new but no faile of the old
@@ -113,14 +117,14 @@ subroutine one_step_value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_old,V_new)
             !!!!!!!!!!!!!!!!!!
                 do ind=1,2*P-1
                     if (CCP(ind,2)/=0.0d0 .and. CCP(ind,2)/=1.0d0) then
-                        V_new(ind,3)=T_g+Ef_v(ind,3)-2.0d0*tau & 
+                        V_new(ind,3)=T_g+Ef_v(ind,3)-2.0d0*tau-vec_N(ind)*tau_per_N & 
                                         + CCP(ind,2)*(rho(2)*gamma-rho(2)*log(CCP(ind,2))) & 
                                         + (1.0d0-CCP(ind,2))*(rho(2)*gamma-rho(2)*log(1.0d0-CCP(ind,2))) &
                                         + beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))**2.0d0*sum(F(ind,1:2*P-1,3,3)*V_old(1:2*P-1,3)) & !none fails
                                         + 2.0d0*beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))*PI_f_v(ind,3,P,v_l,u_l)*sum(F(ind,1:2*P-1,3,2)*V_old(1:2*P-1,2)) & !one fails
                                         + beta*PI_f_v(ind,3,P,v_l,u_l)**2.0d0*sum(F(ind,1:2*P-1,3,1)*V_old(1:2*P-1,1))  !both fail
                     else
-                        V_new(ind,3)=T_g+Ef_v(ind,3)-2.0d0*tau & 
+                        V_new(ind,3)=T_g+Ef_v(ind,3)-2.0d0*tau-vec_N(ind)*tau_per_N & 
                                         +rho(2)*gamma &                        
                                         + beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))**2.0d0*sum(F(ind,1:2*P-1,3,3)*V_old(1:2*P-1,3)) & !none fails
                                         + 2.0d0*beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))*PI_f_v(ind,3,P,v_l,u_l)*sum(F(ind,1:2*P-1,3,2)*V_old(1:2*P-1,2)) & !one fails

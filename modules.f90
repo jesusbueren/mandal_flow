@@ -51,7 +51,7 @@ module primitives
     double precision,dimension(unobs_types)::pr_unobs_t=1.0d0/dble(unobs_types)
     double precision::pr_z_type2_to_pr_z=1.0d0
     !Taxation parameters
-    double precision::T_g=0.0d0,tau=0.0d0
+    double precision::T_g=0.0d0,tau=0.0d0,tau_per_N=0.0d0
     double precision,dimension(2*P_max-1,P_max,types_a,villages,unobs_types)::smthg=0.06d0
     integer::social
     
