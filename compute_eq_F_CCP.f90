@@ -127,7 +127,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
         pr_n(n_l)=sum(pr_n_u(n_l,:)*pr_unobs_t)
     end do
     
-    
+
     !call generate_beliefs(CCP_mid,V_fct,Ef_v(:,:,:,:,v_l,:),n_initial,F,v_l,iterations,mean_N,social_output,private_output,Pr_u_X)
     !print*,'dist CCP',dist,'social_output',social_output
     end subroutine

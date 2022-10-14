@@ -33,7 +33,7 @@ subroutine counterfactual_2(params_MLE)
         pr_non_zombie_a(A_type(i_l))=pr_non_zombie_a(A_type(i_l))+pr_non_zombie_i(i_l)
     end do
     
-    pr_non_zombie=pr_non_zombie_a/dble(counter_a)
+    pr_non_zombie=pr_non_zombie_a/dble(counter_a)*params_MLE(6)
      call load_cadastral_maps()
     
     tau_grid(1)=0.0d0

@@ -35,17 +35,17 @@ subroutine estimation2(params_MLE,log_likeli)
     max_mle=99999999.0d0
     
     !Flow p
-    p_g(1,1)=0.47d0 
+    p_g(1,1)=0.44d0 
     !Productivity p
-    p_g(1,2)=9.94d0
+    p_g(1,2)=9.45d0
     !Var taste shock
-    p_g(1,3)=2.08d0
+    p_g(1,3)=1.88d0
     !Intercept
-    p_g(1,4)=-9.06d0
+    p_g(1,4)=-7.45d0
     !Wealth slope
-    p_g(1,5)=0.77d0
-
-    
+    p_g(1,5)=0.87d0
+    !Shrinkage parameter
+    p_g(1,6)=0.75d0    
 
 
     do p_l=2,par+1
@@ -58,20 +58,21 @@ subroutine estimation2(params_MLE,log_likeli)
     do p_l=1,par+1
         p_g(p_l,1)=log(p_g(p_l,1)/(1.0d0-p_g(p_l,1)))
         p_g(p_l,2:3)=log(p_g(p_l,2:3))
-
+        p_g(p_l,6)=log(p_g(p_l,6)/(1.0d0-p_g(p_l,6)))
         y(p_l)=log_likelihood2(p_g(p_l,:))  
         read*,pause_k
     end do 
 
     !print*,'likelihood_ini',y(1)
         
-    ftol=1.0d-7
+    ftol=1.0d-5
     
     call amoeba(p_g,y,ftol,log_likelihood2,iter)
     
     log_likeli=y(1)
     p_g(1,1)=1.0d0/(1.0d0+exp(-p_g(1,1)))
     p_g(1,2:3)=exp(p_g(1,2:3))
+    p_g(1,6)=1.0d0/(1.0d0+exp(-p_g(1,6)))
 
 
     
@@ -132,6 +133,7 @@ function log_likelihood2(params_MLE)
     params(1)=1.0d0/(1.0d0 + exp(-params_MLE(1))) 
     params(2:3)=exp(params_MLE(2:3))
     params(4:5)=params_MLE(4:5) 
+    params(6)=1.0d0/(1.0d0 + exp(-params_MLE(6))) 
     
     counter_a=0
     pr_non_zombie_a=0.0d0
@@ -140,7 +142,7 @@ function log_likelihood2(params_MLE)
         counter_a(A_type(i_l))=counter_a(A_type(i_l))+1
         pr_non_zombie_a(A_type(i_l))=pr_non_zombie_a(A_type(i_l))+pr_non_zombie_i(i_l)
     end do
-    pr_non_zombie=pr_non_zombie_a/dble(counter_a)
+    pr_non_zombie=pr_non_zombie_a/dble(counter_a)*params(6)
     print*,'Non-constrained pr',pr_non_zombie
     
     counter_an=0
@@ -191,7 +193,7 @@ function log_likelihood2(params_MLE)
     CCP=0.07d0
     joint_pr=0.0d0   
     
-    !$omp parallel default(private) shared(params,f,ccp,v_fct,v_social,n_dist,v_l,mean_n,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n_v) 
+    !$omp parallel default(private) shared(params,f,ccp,v_fct,v_social,n_dist,v_l,mean_n,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n_v,pr_n_v) 
     !$omp  do
     do v_l=1,villages
         print*,'village',v_l
@@ -410,6 +412,7 @@ function log_likelihood2(params_MLE)
     
     pr_n_av=pr_n_av*sum(pr_non_zombie_i(:))/dble(plots_i)
     pr_n_av(1)=pr_n_av(1)+(1.0d0-sum(pr_non_zombie_i(:))/dble(plots_i))
+
     
     pr_d_w_av=0.0d0
     do q_l=1,wealth_quantiles
@@ -422,7 +425,8 @@ function log_likelihood2(params_MLE)
         pr_N_n_av(1:max_NFW+1)=0.0d0
     end if
 
-    log_likelihood2=sum((pr_d_a_n_av*pr_non_zombie_an(:,1:2)-moment_own_nxa_data)**2.0d0)+ sum((pr_d_w_av*pr_non_zombie_w-moment_w_data)**2.0d0)+(pr_N_n_av(1)-pr_N_n_data(1))**2.0d0
+    log_likelihood2=sum((pr_d_a_n_av*pr_non_zombie_an(:,1:2)-moment_own_nxa_data)**2.0d0)+ sum((pr_d_w_av*pr_non_zombie_w-moment_w_data)**2.0d0)+(pr_n_av(1)-pr_little_n_data(1))**2.0d0 + &
+                    (pr_N_n_av(1)-pr_N_n_data(1))**2.0d0 
     
     if (isnan(log_likelihood2)) then
         print*,'paused in estimation2'

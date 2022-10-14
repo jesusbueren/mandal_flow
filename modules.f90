@@ -1,8 +1,8 @@
 module dimensions
     implicit none
     integer,parameter::P_max=8 ! Set the maximum number of plots in an adjacency
-    integer,parameter::K=5,par=5,M=2,COV=4,types_a=4 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
-    integer,parameter::sims=20
+    integer,parameter::K=5,par=6,M=2,COV=4,types_a=4 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
+    integer,parameter::sims=4!20
 end
     
 module cadastral_maps
@@ -90,6 +90,7 @@ use cadastral_maps
     double precision,dimension(types_a,villages,wealth_quantiles)::shares_w_v
     double precision,dimension(villages)::shares_v_n
     double precision,dimension(2*P_max-1)::pr_N_n_data
+    double precision,dimension(3)::pr_little_n_data
     
     !Unobsverded heterogeneity from beliefs
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::Pr_u_X

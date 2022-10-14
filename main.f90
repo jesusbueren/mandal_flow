@@ -75,7 +75,7 @@ do P_l=1,P_max
     CCP_est(1:2*P_l-1,1:2,P_l,:,:,1)=0.07d0
 end do
 
-!call estimation2(params_MLE,log_likeli)
+call estimation2(params_MLE,log_likeli)
 
 !if (ns==1) then
 !open(unit=12, file=path_results//"parameters_sim.txt")
@@ -87,7 +87,7 @@ end do
 !close(12)
 !end if
 
-open(unit=12, file=path_results//"parameters_new.txt")
+open(unit=12, file=path_results//"parameters.txt")
     read(12,'(<par>f20.12)'),params_MLE
 close(12)
 
