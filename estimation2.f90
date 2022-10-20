@@ -35,17 +35,17 @@ subroutine estimation2(params_MLE,log_likeli)
     max_mle=99999999.0d0
     
     !Flow p
-    p_g(1,1)=0.44d0 
+    p_g(1,1)=0.61d0 
     !Productivity p
-    p_g(1,2)=9.45d0
+    p_g(1,2)=10.27d0
     !Var taste shock
-    p_g(1,3)=1.88d0
+    p_g(1,3)=1.7d0
     !Intercept
-    p_g(1,4)=-7.45d0
+    p_g(1,4)=-9.17d0
     !Wealth slope
     p_g(1,5)=0.87d0
     !Shrinkage parameter
-    p_g(1,6)=0.75d0    
+    p_g(1,6)=0.36d0    
 
 
     do p_l=2,par+1
@@ -60,12 +60,12 @@ subroutine estimation2(params_MLE,log_likeli)
         p_g(p_l,2:3)=log(p_g(p_l,2:3))
         p_g(p_l,6)=log(p_g(p_l,6)/(1.0d0-p_g(p_l,6)))
         y(p_l)=log_likelihood2(p_g(p_l,:))  
-        read*,pause_k
+        !read*,pause_k
     end do 
 
     !print*,'likelihood_ini',y(1)
         
-    ftol=1.0d-5
+    ftol=1.0d-4
     
     call amoeba(p_g,y,ftol,log_likelihood2,iter)
     
@@ -171,15 +171,6 @@ function log_likelihood2(params_MLE)
     !Call seed number
     call random_seed(PUT=seed)
     
-    !Set zombie plots
-    do v_l=1,villages;do i_l=1,plots_v(v_l);do s_l=1,sims
-        call RANDOM_NUMBER(u)
-        if (u<pr_non_zombie(unobs_types_i(i_l,v_l,s_l))) then
-            active_plots(i_l,v_l,s_l)=1
-        else
-            active_plots(i_l,v_l,s_l)=0
-        end if
-    end do;end do;end do
 
     print*,' parameters',params
     
@@ -431,7 +422,7 @@ function log_likelihood2(params_MLE)
     if (isnan(log_likelihood2)) then
         print*,'paused in estimation2'
         print*,pr_N_n_v(1,:)
-        read*, end_k
+        !read*, end_k
     end if
     
 

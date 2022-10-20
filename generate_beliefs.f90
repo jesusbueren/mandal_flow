@@ -37,6 +37,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     integer,dimension(types_a,3)::count_a_n
     double precision,dimension(2*P_max-1),intent(out)::pr_N_n
     
+    !active_plots(415,1,1)
     
     
     !Set number of iterations
@@ -101,21 +102,25 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
             CCP_av(t_l-burn_t,s_l)=0.0d0
             it2=0.0d0
         end if
-        
-        state(:,1)=n_initial(:,1)
+        if (t_l>1) then
+            state(:,1)=n_initial(:,1)
+        else
+            n_initial(:,1)=1
+            state(:,1)=1
+        end if
         !print*,'t_l',t_l,'av number of wells per plot',real(sum(n_initial(1:plots_v(v_l),1))-plots_v(v_l))/real(plots_v(v_l))
         do i_l=1,plots_v(v_l)
             do r_l=1,8
                 call random_value( seed_new, draw(r_l) )
             end do
-                
-            if (active_plots(i_l,v_l,s_l)==1) then
+                  
+            if (active_plots(i_l,v_l,s_l)==1) then  
                 N_all=1 !Indicates the number of wells in the adjacency
                 !Loop over all neighbors
                 do j_l=1,PA_type(i_l,1,v_l,s_l) !PA_type(i_l,1) stores the number of plots in the adjacency
-                    if (state(neighbors(i_l,j_l,v_l,s_l),1)==2)  then 
+                    if (state(neighbors(i_l,j_l,v_l,s_l),1)==2)  then  !neighbors(i_l,:,v_l,s_l) 
                         N_all=N_all+1 !number of wells (there is one well)
-                    elseif (state(neighbors(i_l,j_l,v_l,s_l),1)==3)  then
+                    elseif (state(neighbors(i_l,j_l,v_l,s_l),1)==3)  then !neighbors(1,:,v_l,s_l)
                         N_all=N_all+2 !number of wells (there is two wells)
                     end if
                 end do
@@ -169,6 +174,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                 end if
                 !Well drilling decision and failures/successes
                 drill_old(i_l)=1
+                
                 if (n_l==1) then !no well
                     u_d=draw(1) 
                     if (u_d<CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))) then !decides to drill
@@ -244,7 +250,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                 end if
             end if                    
         end do
-        
+        !pr_N_n_it_c
         !Store current state
         state_old=state
         !Compute beliefs
@@ -263,11 +269,11 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                         end if
                     end if
             end do;end do;end do;end do;end do
-            total_N(t_l-burn_t,s_l)=sum(n_initial(1:plots_v(v_l),1))-plots_v(v_l) 
+            total_N(t_l-burn_t,s_l)=sum(n_initial(1:plots_v(v_l),1))-plots_v(v_l)  !total_N(:,1)
         end if
         it=it+1
     end do 
-end do
+end do 
     
 total_f(:,1)=sum(total_f,2)/sum(total_N,2) !total_f(1,:) total_N(1,:)
     ! In case I don't have observations for a given state, I consider that the transition pr 
@@ -301,7 +307,7 @@ total_f(:,1)=sum(total_f,2)/sum(total_N,2) !total_f(1,:) total_N(1,:)
     private_output=sum(NPV_PV)/dble(its*sims)/mean_area(v_l)
     mean_N=sum(total_N)/dble(its*sims)/dble(plots_v(v_l))
     do ind=1,2*P_max-1
-        pr_N_n(ind)=dble(sum(pr_N_n_it_c(ind,:)))/dble(sum(pr_N_n_it_c))
+        pr_N_n(ind)=dble(sum(pr_N_n_it_c(ind,:)))/dble(sum(pr_N_n_it_c)) 
     end do
 
     

@@ -48,48 +48,31 @@ subroutine load_cadastral_maps()
         close(12)
         
         !Set zombie plots
-
         do i=1,plots_v(v_l)
             call RANDOM_NUMBER(u)
             if (u<pr_non_zombie(area_type(v_l,i))) then
                 active_plots(i,v_l,s_l)=1
             else
-                active_plots(i,v_l,s_l)=0
-                neighbors_map(i,:,v_l)=0
-                neighbors_map(:,i,v_l)=0
+                active_plots(i,v_l,s_l)=0 
             end if
         end do
-
-            
         
+
         !Store which are my neighbors
-        do i=1,plots_in_map;
+        do i=1,plots_in_map
             neighbors_map(i,i,v_l)=1
             ind=1
             neighbors(i,ind,v_l,s_l)=i
             ind=ind+1
             do j=1,plots_in_map
-                if (neighbors_map(i,j,v_l)==1 .and. j/=i .and. ind>P_max) then
-                    neighbors_map(i,j,v_l)=0
-                    neighbors_map(j,i,v_l)=0
-                    if (j<i) then
-                        ind2=2
-                        do j2=1,plots_in_map
-                            if (neighbors_map(j,j2,v_l)==1 .and. j/=j2 .and. ind2<=P_max) then !the number of neighbors cannot be greater than P_max ortherwise I select the firt P_max neighbors
-                                neighbors(j,ind2,v_l,s_l)=j2
-                                ind2=ind2+1
-                            end if
-                        end do
-                    end if                        
-                end if 
-                if (neighbors_map(i,j,v_l)==1 .and. j/=i .and. ind<=P_max) then !the number of neighbors cannot be greater than P_max ortherwise I select the firt P_max neighbors
-                    neighbors(i,ind,v_l,s_l)=j
+                if (neighbors_map(i,j,v_l)==1 .and. j/=i .and. ind<=P_max) then !the number of neighbors cannot be greater than P_max ortherwise I select the firt P_max neighbors 
+                    neighbors(i,ind,v_l,s_l)=j 
                     ind=ind+1
                 end if                  
             end do
         end do
         !number of neighbors
-        PA_type(1:plots_v(v_l),1,v_l,s_l)=min(sum(neighbors_map(1:plots_v(v_l),1:plots_v(v_l),v_l),2),P_max) !PA_type(1:plots_v(v_l),1,v_l)
+        PA_type(1:plots_v(v_l),1,v_l,s_l)=min(sum(neighbors_map(1:plots_v(v_l),1:plots_v(v_l),v_l),2),P_max)
         !if (v_l<10) then
         !    Write( s_c1, '(I1)' )  v_l
         !    OPEN(UNIT=12, FILE=file_map//"new_map_"//s_c1//".txt")
@@ -102,7 +85,7 @@ subroutine load_cadastral_maps()
     end do;end do
     !PA_type(:,1,1)
     
-    
+    !neighbors(398,:,1,1)=0 PA_type(957,1,1,1)
     
     v_l=1
     PA_stat=0
