@@ -77,15 +77,6 @@ end do
 
 !call estimation2(params_MLE,log_likeli)
 
-!if (ns==1) then
-!open(unit=12, file=path_results//"parameters_sim.txt")
-!    write(12,'(<par>f20.12,f20.12)'),params_mle,log_likeli
-!close(12)
-!else
-! open(unit=12, file=path_results//"parameters_sim.txt",access='append')   
-! write(12,'(<par>f20.12,f20.12)'),params_mle,log_likeli
-!close(12)
-!end if
 
 open(unit=12, file=path_results//"parameters.txt")
     read(12,'(<par>f20.12)'),params_MLE

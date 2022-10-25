@@ -194,8 +194,10 @@ subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa,moment_w)
         
         OPEN(UNIT=12, FILE=path_results//string_name//"_BigN_n.txt")
             pr_N_n_data=0.0d0
-            pr_N_n_data(1:max_NFW+1)=sum(counter_BigN_n,2)/sum(counter_BigN_n)
-            write(12,*),pr_N_n_data(1:max_NFW+1)
+            do n_l=1,3
+                pr_N_n_data(1:max_NFW+1,n_l)=counter_BigN_n(:,n_l)/sum(counter_BigN_n(:,n_l))
+                write(12,*),pr_N_n_data(1:max_NFW+1,n_l) !pr_N_n_data(:,3)
+            end do
         close(12)
         
         pr_little_n_data=dble(counter_little_n)/dble(sum(counter_little_n))

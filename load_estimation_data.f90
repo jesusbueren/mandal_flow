@@ -65,14 +65,21 @@ subroutine load_estimation_data
         end if            
     end do;end do
     
-    shares_v_n=sum(sum(shares_n_a_v(:,:,:),2),1)/sum(shares_n_a_v(:,:,:))
+    shares_v=sum(sum(shares_n_a_v(:,:,:),2),1)/sum(shares_n_a_v)
+    
+    do n_l=1,3
+        shares_v_n(:,n_l)=sum(shares_n_a_v(:,n_l,:),1)/sum(shares_n_a_v(:,n_l,:))
+    end do
     
     do q_l=1,wealth_quantiles
         shares_w_v(:,:,q_l)=shares_w_v(:,:,q_l)/sum(shares_w_v(:,:,q_l)) !shares_w_v(:,:,1)
     end do 
     
+
+    shares_a_v=sum(shares_n_a_v(:,:,:),2)/sum(shares_n_a_v)
+
     
-    do n_l=1,2;do a_l=1,types_a
+    do n_l=1,3;do a_l=1,types_a
         shares_n_a_v(a_l,n_l,:)=shares_n_a_v(a_l,n_l,:)/sum(shares_n_a_v(a_l,n_l,:))   
     end do;end do
     

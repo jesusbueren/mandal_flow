@@ -1,4 +1,4 @@
-subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n,pr_n)
+subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n,pr_na)
     use cadastral_maps; use dimensions; use primitives
     implicit none
     double precision,dimension(par),intent(in)::params
@@ -18,8 +18,8 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     integer::p_l,a_l,n_l,P_l2,ind,counter_all,counter_bad,u_l,it
     integer(8),dimension(2*P_max-1,3,3,P_max,unobs_types)::iterations
     double precision,dimension(types_a,2),intent(out)::pr_d_a_n
-    double precision,dimension(2*P_max-1),intent(out)::pr_N_n
-    double precision,dimension(3),intent(out)::pr_n
+    double precision,dimension(2*P_max-1,3),intent(out)::pr_N_n
+    double precision,dimension(3,types_a),intent(out)::pr_na
     character::pause_k
     
     Mean_N_old=0.0d0
@@ -45,10 +45,12 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     pr_n_u_old=0.0d0
     n_start=n_initial
     1 n_initial=1
-    call generate_beliefs(CCP,V_fct,V_social,Ef_v(:,:,:,:,v_l,:),n_initial,F,v_l,iterations,mean_N,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n) 
+    call generate_beliefs(CCP,V_fct,V_social,Ef_v(:,:,:,:,v_l,:),n_initial,F,v_l,iterations,mean_N,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n,pr_na) 
     do u_l=1,unobs_types;do n_l=1,3
         pr_n_u(n_l,u_l)=sum(joint_pr(:,n_l,:,:,u_l))/sum(joint_pr(:,:,:,:,u_l))
     end do;end do
+
+
     
     !For each plot type obtain a new CCP given beliefs
     !print*,'policy step'
@@ -73,7 +75,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
                             ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,u_l) &
                             ,P_l &
                             ,CCP(1:2*P_l-1,:,P_l,a_l,u_l),CCP2(1:2*P_l-1,:,P_l,a_l,u_l),v_l,u_l & 
-                            ,V_social(1:2*P_l-1,:,P_l,a_l,u_l),a_l) !V_social(1,1,1,4,:) CCP(1,:,1,4,3) V_social(1,1,1,4,:)
+                            ,V_social(1:2*P_l-1,:,P_l,a_l,u_l),a_l) !V_social(1,1,1,4,:) CCP(1,:,1,4,3) V_social(1,1,1,4,:) CCP(1,:,1,4,:)
     end do;
     !if (minval(CCP(1:2*P_l-1,:,P_l,2,u_l)-CCP(1:2*P_l-1,:,P_l,1,u_l))<0.0d0) then
     !    print*,'ufff',minval(CCP(1:2*P_l-1,:,P_l,2,u_l)-CCP(1:2*P_l-1,:,P_l,1,u_l))
@@ -123,9 +125,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
         print*,'equilibrium not reached in village',v_l,dist
     end if
     
-    do n_l=1,3
-        pr_n(n_l)=sum(pr_n_u(n_l,:)*pr_unobs_t)
-    end do
+    
     
 
     !call generate_beliefs(CCP_mid,V_fct,Ef_v(:,:,:,:,v_l,:),n_initial,F,v_l,iterations,mean_N,social_output,private_output,Pr_u_X)

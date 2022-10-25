@@ -15,7 +15,7 @@ subroutine counterfactual_2(params_MLE)
     double precision,dimension(plots_i,unobs_types)::posterior_type
     double precision,dimension(types_a,2)::pr_d_a_n
     double precision,dimension(2*P_max-1,3)::Pr_N_n
-    double precision,dimension(3)::Pr_n
+    double precision,dimension(3,types_a)::pr_na
     double precision,dimension(plots_i):: pr_non_zombie_i
     double precision,dimension(types_a)::pr_non_zombie_a
     integer,dimension(types_a)::counter_a
@@ -27,13 +27,16 @@ subroutine counterfactual_2(params_MLE)
         end function log_likelihood2
      end interface
     
+     rho_sc=params_MLE(6)
+     
      do i_l=1,plots_i
-        pr_non_zombie_i(i_l)=1.0d0/(1.0d0+exp(-(params_MLE(4)+params_MLE(5)*wealth_i(i_l))))
+        pr_non_zombie_i(i_l)=1.0d0/(1.0d0+exp(-(params_MLE(4)+0.0d0*wealth_i(i_l))))
         counter_a(A_type(i_l))=counter_a(A_type(i_l))+1
         pr_non_zombie_a(A_type(i_l))=pr_non_zombie_a(A_type(i_l))+pr_non_zombie_i(i_l)
-    end do
+     end do
     
-    pr_non_zombie=pr_non_zombie_a/dble(counter_a)*params_MLE(6)
+     print*,pr_non_zombie_a/dble(counter_a)
+    pr_non_zombie=pr_non_zombie_a/dble(counter_a)*params_MLE(5)
      call load_cadastral_maps()
     
     tau_grid(1)=0.0d0
@@ -64,7 +67,7 @@ subroutine counterfactual_2(params_MLE)
         n_dist=1
         CCP_true=0.07d0
 
-        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n,pr_n)
+        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n,pr_na)
         
         if (p_l==1 .and. v_l==1) then
             OPEN(UNIT=12, FILE=path_results//"counterfactuals_new.txt")

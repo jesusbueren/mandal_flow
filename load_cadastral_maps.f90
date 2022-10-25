@@ -114,7 +114,7 @@ subroutine load_cadastral_maps()
  
     !print*,dble(counter_type(6,:,11,:))/dble(sum(counter_type(3,1,1,:)))
 
-    !call simulate_spatial_correlation()
+    call simulate_spatial_correlation()
 
     
     counter_type=0

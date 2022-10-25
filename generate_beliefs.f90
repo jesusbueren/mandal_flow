@@ -1,4 +1,4 @@
-subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iterations,mean_N,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n)
+subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iterations,mean_N,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n,pr_na)
     use cadastral_maps; use primitives; use simulation
     implicit none
     double precision,dimension(2*P_max-1,2,P_max,types_a,unobs_types),intent(in)::CCP
@@ -18,9 +18,8 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     double precision::u_d,u_s,u_f,u_m,it2
     integer(8):: its
     double precision,allocatable,dimension(:,:)::NPV,total_N,NPV_PV,CCP_av,total_f
-    integer,allocatable,dimension(:,:)::pr_N_n_it_c
+    integer,allocatable,dimension(:,:,:)::pr_N_n_it_c
     double precision,allocatable,dimension(:,:,:,:)::NPV_by_a_n
-    double precision,allocatable,dimension(:,:,:)::pr_d_a_n_it
     !double precision,dimension(its)::NPV,total_N,NPV_PV,CCP_av
     double precision,intent(out)::mean_N,social_output,private_output
     integer(8),dimension(2*P_max-1,2*P_max-1,3,3,P_max,unobs_types)::beliefs_c
@@ -34,8 +33,9 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     character(LEN=1)::s_c1
     character(LEN=2)::s_c2
     double precision,dimension(8)::draw
-    integer,dimension(types_a,3)::count_a_n
-    double precision,dimension(2*P_max-1),intent(out)::pr_N_n
+    integer,dimension(3,types_a)::count_a_n
+    double precision,dimension(2*P_max-1,3),intent(out)::pr_N_n
+    double precision,dimension(3,types_a),intent(out)::pr_na
     
     !active_plots(415,1,1)
     
@@ -48,9 +48,9 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     allocate ( total_f(its,sims))
     allocate ( NPV_PV(its,sims))
     allocate ( CCP_av(its,sims))
-    allocate ( pr_N_n_it_c(2*P_max-1,sims))
+    allocate ( pr_N_n_it_c(2*P_max-1,3,sims))
     allocate ( NPV_by_a_n(its,sims,types_a,3))
-    allocate ( pr_d_a_n_it(sims,types_a,2))
+
     
     !prior of beliefs
     F_new=-9.0
@@ -77,15 +77,14 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     NPV=0.0d0
     NPV_by_a_n=0.0d0
     pr_N_n_it_c=0
-    
+    pr_d_a_n=0.0d0
 
     total_f=0
     beliefs_c=0
     it=0
 
-
+    count_a_n=0
     do s_l=1,sims;
-        count_a_n=0
         do t_l=1,T-1;
         !print*,t_l
         !simulate monsoon next period
@@ -163,13 +162,13 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                         it2=it2+1.0d0
                         CCP_av(t_l-burn_t,s_l)=(it2-1.0d0)/it2*CCP_av(t_l-burn_t,s_l)+1.0d0/it2*CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))
                     end if
-                    pr_N_n_it_c(ind,s_l)=pr_N_n_it_c(ind,s_l)+1.0d0
+                    pr_N_n_it_c(ind,n_l,s_l)=pr_N_n_it_c(ind,n_l,s_l)+1.0d0
                     NPV_PV(t_l-burn_t,s_l)=dble(i_l-1)/dble(i_l)*NPV_PV(t_l-burn_t,s_l)+1.0d0/dble(i_l)*(V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))
                     NPV(t_l-burn_t,s_l)=dble(i_l-1)/dble(i_l)*NPV(t_l-burn_t,s_l)+1.0d0/dble(i_l)*(V_social(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))
-                    count_a_n(A,n_l)=count_a_n(A,n_l)+1
-                    NPV_by_a_n(t_l-burn_t,s_l,A,n_l)=dble(count_a_n(A,n_l)-1)/dble(count_a_n(A,n_l))*NPV_by_a_n(t_l-burn_t,s_l,A,n_l)+1.0d0/dble(count_a_n(A,n_l))*(V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))
+                    count_a_n(n_l,A)=count_a_n(n_l,A)+1
+                    NPV_by_a_n(t_l-burn_t,s_l,A,n_l)=dble(count_a_n(n_l,A)-1)/dble(count_a_n(n_l,A))*NPV_by_a_n(t_l-burn_t,s_l,A,n_l)+1.0d0/dble(count_a_n(n_l,A))*(V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))
                     if (n_l<3) then
-                        pr_d_a_n_it(s_l,A,n_l)=dble(count_a_n(A,n_l)-1)/dble(count_a_n(A,n_l))*pr_d_a_n_it(s_l,A,n_l)+1.0d0/dble(count_a_n(A,n_l))*CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))
+                        pr_d_a_n(A,n_l)=dble(count_a_n(n_l,A)-1)/dble(count_a_n(n_l,A))*pr_d_a_n(A,n_l)+1.0d0/dble(count_a_n(n_l,A))*CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))
                     end if
                 end if
                 !Well drilling decision and failures/successes
@@ -306,24 +305,16 @@ total_f(:,1)=sum(total_f,2)/sum(total_N,2) !total_f(1,:) total_N(1,:)
     social_output=sum(NPV)/dble(its*sims)/mean_area(v_l)
     private_output=sum(NPV_PV)/dble(its*sims)/mean_area(v_l)
     mean_N=sum(total_N)/dble(its*sims)/dble(plots_v(v_l))
-    do ind=1,2*P_max-1
-        pr_N_n(ind)=dble(sum(pr_N_n_it_c(ind,:)))/dble(sum(pr_N_n_it_c)) 
-    end do
+    do n_l=1,3;do ind=1,2*P_max-1
+        pr_N_n(ind,n_l)=dble(sum(pr_N_n_it_c(ind,n_l,:)))/dble(sum(pr_N_n_it_c(:,n_l,:))) 
+    end do;end do
 
     
-    ! av drilling across n & a
-    do a_l=1,types_a;do n_l=1,3
-        if (n_l<3) then
-            pr_d_a_n(a_l,n_l)=sum(pr_d_a_n_it(:,a_l,n_l))/dble(sims)
-        end if
-        !print*,'-----------------------------------'
-        !print*,'a_l',a_l,' n_l',n_l
-        !print('(A20,F8.2)'),'value of land:',real(sum(NPV_by_a_n(:,:,a_l,n_l))/dble(its*sims)/pr_non_zombie(v_l)/area(a_l))
-        !print('(A20,F6.3)'),'share',dble(count_a_n(a_l,n_l))/dble(sum(count_a_n))
-    end do;end do
+
     
-    
-    !print*,'Mean N',mean_N
+    do a_l=1,types_a
+        pr_na(:,a_l)=dble(count_a_n(:,a_l))/dble(sum(count_a_n(:,a_l)))
+    end do
     
     joint_pr=0.0d0
      do P_l=1,P_max; do u_l=1,unobs_types;do a_l=1,types_a
