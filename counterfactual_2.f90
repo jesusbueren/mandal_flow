@@ -28,6 +28,7 @@ subroutine counterfactual_2(params_MLE)
      end interface
     
      rho_sc=params_MLE(6)
+     shrinkage_p=params_MLE(5)
      
      do i_l=1,plots_i
         pr_non_zombie_i(i_l)=1.0d0/(1.0d0+exp(-(params_MLE(4)+0.0d0*wealth_i(i_l))))
@@ -36,7 +37,7 @@ subroutine counterfactual_2(params_MLE)
      end do
     
      print*,pr_non_zombie_a/dble(counter_a)
-    pr_non_zombie=pr_non_zombie_a/dble(counter_a)*params_MLE(5)
+    pr_non_zombie=pr_non_zombie_a/dble(counter_a)*shrinkage_p
      call load_cadastral_maps()
     
     tau_grid(1)=0.0d0

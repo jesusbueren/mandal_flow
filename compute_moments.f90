@@ -54,12 +54,12 @@ subroutine compute_moments(data_in,string_name,joint_pr,moment_own_nxa,moment_w)
                     moment_own_nxa(A_type(i_l),n_data(t_l,i_l))=(counter_own_nxa(A_type(i_l),n_data(t_l,i_l))-1.0)/counter_own_nxa(A_type(i_l),n_data(t_l,i_l))*moment_own_nxa(A_type(i_l),n_data(t_l,i_l))&
                                                     +1.0d0/counter_own_nxa(A_type(i_l),n_data(t_l,i_l))*data_in(t_l,i_l)
                     
-                    !Moments across wealth
-                    if (n_data(t_l,i_l)==1) then
-                        counter_w(wealth_q(t_l,i_l))=counter_w(wealth_q(t_l,i_l))+1.0d0
-                        moment_w(wealth_q(t_l,i_l))=(counter_w(wealth_q(t_l,i_l))-1.0)/counter_w(wealth_q(t_l,i_l))*moment_w(wealth_q(t_l,i_l)) &
-                                                        +1.0d0/counter_w(wealth_q(t_l,i_l))*data_in(t_l,i_l)
-                    end if
+                    !!Moments across wealth
+                    !if (n_data(t_l,i_l)==1) then
+                    !    counter_w(wealth_q(t_l,i_l))=counter_w(wealth_q(t_l,i_l))+1.0d0
+                    !    moment_w(wealth_q(t_l,i_l))=(counter_w(wealth_q(t_l,i_l))-1.0)/counter_w(wealth_q(t_l,i_l))*moment_w(wealth_q(t_l,i_l)) &
+                    !                                    +1.0d0/counter_w(wealth_q(t_l,i_l))*data_in(t_l,i_l)
+                    !end if
 
                     !Moments across number of unobserved heterogeneity types
                     do u_l=1,unobs_types

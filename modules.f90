@@ -8,7 +8,7 @@ end
 module cadastral_maps
     use dimensions
     implicit none
-    double precision:: rho_sc=0.9d0
+    double precision:: rho_sc=0.9d0,shrinkage_p
     integer,parameter::plots_in_map=1909,villages=14,unobs_types=3,wealth_quantiles=4
     integer,parameter,dimension(villages)::plots_v=(/1794,302,912,517,292,535,939,637,405,837,973,1844,443,1909/) !plots in each village
     double precision,dimension(villages):: mean_area
@@ -47,6 +47,8 @@ module primitives
     !area of plots
     double precision,dimension(types_a)::area=(/1.0d0,2.0d0,3.0d0,5.1d0/) 
     double precision,dimension(types_a-1)::area_lims=(/1.3d0,2.3d0,4.0d0/) 
+    !wealth quantiles
+    double precision,dimension(wealth_quantiles-1)::w_lims=(/12.37d0,12.97d0,15.0d0/) 
     !pr of unobserved heterogeneity type
     double precision,dimension(unobs_types)::pr_unobs_t=1.0d0/dble(unobs_types)
     double precision::pr_z_type2_to_pr_z=1.0d0

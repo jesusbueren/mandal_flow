@@ -1,7 +1,7 @@
 subroutine load_estimation_data
     use simulation
     implicit none
-    double precision,dimension(24,T_sim,plots_i)::data_csv
+    double precision,dimension(23,T_sim,plots_i)::data_csv
     integer::i_l,t_l,n_l,a_l,q_l
     double precision,dimension(types_a)::moment_a
     double precision,dimension(max_NFW+1)::moment_N
@@ -20,7 +20,7 @@ subroutine load_estimation_data
     
     P_type=data_csv(2,1,:)
     wealth_i=data_csv(23,1,:)
-    wealth_q=data_csv(24,:,:)
+    wealth_q=-9!data_csv(24,:,:)
     
 
     A_type=data_csv(3,1,:)
@@ -57,12 +57,8 @@ subroutine load_estimation_data
     
     
     shares_n_a_v=0.0d0
-    shares_w_v=0.0d0
     do i_l=1,plots_i;do t_l=1,T_sim
         shares_n_a_v(A_type(i_l),n_data(t_l,i_l),V_type(i_l))=shares_n_a_v(A_type(i_l),n_data(t_l,i_l),V_type(i_l))+1.0d0
-        if (n_data(t_l,i_l)==1) then
-            shares_w_v(A_type(i_l),V_type(i_l),wealth_q(t_l,i_l))=shares_w_v(A_type(i_l),V_type(i_l),wealth_q(t_l,i_l))+1.0d0
-        end if            
     end do;end do
     
     shares_v=sum(sum(shares_n_a_v(:,:,:),2),1)/sum(shares_n_a_v)
@@ -71,9 +67,6 @@ subroutine load_estimation_data
         shares_v_n(:,n_l)=sum(shares_n_a_v(:,n_l,:),1)/sum(shares_n_a_v(:,n_l,:))
     end do
     
-    do q_l=1,wealth_quantiles
-        shares_w_v(:,:,q_l)=shares_w_v(:,:,q_l)/sum(shares_w_v(:,:,q_l)) !shares_w_v(:,:,1)
-    end do 
     
 
     shares_a_v=sum(shares_n_a_v(:,:,:),2)/sum(shares_n_a_v)
