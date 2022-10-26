@@ -40,12 +40,14 @@ subroutine estimation2(params_MLE,log_likeli)
     p_g(1,2)=7.4d0
     !Var taste shock
     p_g(1,3)=2.64d0
-    !Intercept
-    p_g(1,4)=1.1d0
-    !Shrinkage parameter
-    p_g(1,5)=0.42d0  
+    !Intercept logit contrained
+    p_g(1,4)=-6.5d0
+    !Shrinkage parameter 
+    p_g(1,5)=5.1d0  
     !Spatial correlation
-    p_g(1,6)=0.99d0 
+    p_g(1,6)=0.9d0 
+    !wealth effect logit contrained
+    p_g(1,7)=0.7d0
 
 
 
@@ -59,9 +61,9 @@ subroutine estimation2(params_MLE,log_likeli)
     do p_l=1,par+1
         p_g(p_l,1)=log(p_g(p_l,1)/(1.0d0-p_g(p_l,1)))
         p_g(p_l,2:3)=log(p_g(p_l,2:3))
-        p_g(p_l,5:6)=log(p_g(p_l,5:6)/(1.0d0-p_g(p_l,5:6)))
+        p_g(p_l,6)=log(p_g(p_l,6)/(1.0d0-p_g(p_l,6)))
         y(p_l)=log_likelihood2(p_g(p_l,:))  
-        read*,pause_k
+        !read*,pause_k
     end do 
 
     !print*,'likelihood_ini',y(1)
@@ -73,7 +75,7 @@ subroutine estimation2(params_MLE,log_likeli)
     log_likeli=y(1)
     p_g(1,1)=1.0d0/(1.0d0+exp(-p_g(1,1)))
     p_g(1,2:3)=exp(p_g(1,2:3))
-    p_g(1,5:6)=1.0d0/(1.0d0+exp(-p_g(1,5:6)))
+    p_g(1,6)=1.0d0/(1.0d0+exp(-p_g(1,6)))
 
 
 
@@ -125,34 +127,41 @@ function log_likelihood2(params_MLE)
     double precision::u
     double precision,dimension(plots_i):: pr_non_zombie_i
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::empty=-9.0d0
-    double precision,dimension(types_a)::pr_non_zombie_a,pr_non_zombie_s
+    double precision,dimension(types_a)::pr_non_zombie_a_s
+    double precision,dimension(wealth_quantiles,types_a)::pr_non_zombie_aw_s
     integer,dimension(types_a)::counter_a
-
-    double precision,dimension(wealth_quantiles)::pr_d_w_av
+    integer,dimension(wealth_quantiles,types_a)::counter_aw
+    double precision,dimension(wealth_quantiles,types_a)::pr_d_wa
+    double precision,dimension(wealth_quantiles,types_a,villages)::pr_non_zombie_wav
     
     
     params(1)=1.0d0/(1.0d0 + exp(-params_MLE(1))) 
     params(2:3)=exp(params_MLE(2:3))
-    params(4)=params_MLE(4) 
-    params(5:6)=1.0d0/(1.0d0 + exp(-params_MLE(5:6))) 
+    params(4)=params_MLE(4)
+    params(5)=params_MLE(5)
+    params(6)=1.0d0/(1.0d0 + exp(-params_MLE(6))) 
+    params(7)=params_MLE(7) 
 
-    
     rho_sc=params(6)
+    shrinkage_p=params(5)
+    logit_constrain_p=(/params(4),params(7)/)
     
     counter_a=0
-    pr_non_zombie_a=0.0d0
+    pr_non_zombie_a_s=0.0d0
+    counter_aw=0
+    pr_non_zombie_aw_s=0.0d0
     do i_l=1,plots_i
-        pr_non_zombie_i(i_l)=1.0d0/(1.0d0+exp(-(params(4)+0.0d0*wealth_i(i_l))))
+        pr_non_zombie_i(i_l)=1.0d0/(1.0d0+exp(-(logit_constrain_p(1)+logit_constrain_p(2)*wealth_i(i_l))))
         counter_a(A_type(i_l))=counter_a(A_type(i_l))+1
-        pr_non_zombie_a(A_type(i_l))=pr_non_zombie_a(A_type(i_l))+pr_non_zombie_i(i_l)
+        pr_non_zombie_a_s(A_type(i_l))=pr_non_zombie_a_s(A_type(i_l))+pr_non_zombie_i(i_l)
+        counter_aw(wealth_q(i_l),A_type(i_l))=counter_aw(wealth_q(i_l),A_type(i_l))+1
+        pr_non_zombie_aw_s(wealth_q(i_l),A_type(i_l))=pr_non_zombie_aw_s(wealth_q(i_l),A_type(i_l))+pr_non_zombie_i(i_l)
     end do
-    pr_non_zombie_s=pr_non_zombie_a/dble(counter_a)
-    pr_non_zombie=pr_non_zombie_a/dble(counter_a)*params(5)
-    print*,'Non-constrained pr map',pr_non_zombie
-    
-    
+    pr_non_zombie_a_s=pr_non_zombie_a_s/dble(counter_a)
+    pr_non_zombie_aw_s=pr_non_zombie_aw_s/dble(counter_aw) 
 
-    
+    print*,'Non-constrained pr sample',pr_non_zombie_a_s
+
     
     impute_i=0
      
@@ -175,27 +184,30 @@ function log_likelihood2(params_MLE)
     CCP=0.07d0
     joint_pr=0.0d0   
     
-    !!$omp parallel default(private) shared(params,f,ccp,v_fct,v_social,n_dist,v_l,mean_n,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n_v,pr_na_v) 
-    !!$omp  do
-    !do v_l=1,villages
-    !    print*,'village',v_l
-    !    call compute_eq_f_ccp(params,f(:,:,:,:,:,v_l,:),ccp(:,:,:,:,v_l,:),v_fct(:,:,:,:,v_l,:),v_social(:,:,:,:,v_l,:),n_dist(:,v_l), &
-    !        v_l,mean_n(v_l),social_output(v_l),private_output(v_l),joint_pr(:,:,:,:,v_l,:),pr_d_a_n(:,:,v_l),pr_N_n_v(:,:,v_l),pr_na_v(:,:,v_l))
-    !end do
-    !!$omp end do  nowait
-    !!$omp end parallel 
+    !$omp parallel default(private) shared(params,f,ccp,v_fct,v_social,n_dist,v_l,mean_n,social_output,private_output,joint_pr,pr_d_a_n,pr_N_n_v,pr_na_v) 
+    !$omp  do
+    do v_l=1,villages
+        print*,'village',v_l
+        call compute_eq_f_ccp(params,f(:,:,:,:,:,v_l,:),ccp(:,:,:,:,v_l,:),v_fct(:,:,:,:,v_l,:),v_social(:,:,:,:,v_l,:),n_dist(:,v_l), &
+            v_l,mean_n(v_l),social_output(v_l),private_output(v_l),joint_pr(:,:,:,:,v_l,:),pr_d_a_n(:,:,v_l),pr_N_n_v(:,:,v_l),pr_na_v(:,:,v_l))
+    end do
+    !$omp end do  nowait
+    !$omp end parallel 
     
     open(unit=12, file=path_results//"checks.txt")
-        read(12,*),pr_d_a_n,pr_N_n_v,pr_na_v !pr_d_a_n(:,1,7) pr_na_v(1,1,:) pr_non_zombie_anv(1,:,1) 
+        write(12,*),pr_d_a_n,pr_N_n_v,pr_na_v !pr_d_a_n(:,1,7) pr_na_v(1,1,:) pr_non_zombie_anv(1,:,1) 
     close(12)  
     
     
     do a_l=1,types_a;do v_l=1,villages    
-        pr_non_zombie_anv(1,a_l,v_l)=pr_na_v(1,a_l,v_l)*pr_non_zombie_s(a_l)/(pr_na_v(1,a_l,v_l)*pr_non_zombie_s(a_l)+(1.0d0-pr_non_zombie_s(a_l)))
+        pr_non_zombie_anv(1,a_l,v_l)=pr_na_v(1,a_l,v_l)*pr_non_zombie_a_s(a_l)/(pr_na_v(1,a_l,v_l)*pr_non_zombie_a_s(a_l)+(1.0d0-pr_non_zombie_a_s(a_l)))
     end do ;end do
-    
     pr_non_zombie_anv(2:3,:,:)=1.0d0
-
+    
+    do a_l=1,types_a;do v_l=1,villages; do q_l=1,wealth_quantiles  
+        pr_non_zombie_wav(q_l,a_l,v_l)=pr_na_v(1,a_l,v_l)*pr_non_zombie_aw_s(q_l,a_l)/(pr_na_v(1,a_l,v_l)*pr_non_zombie_aw_s(q_l,a_l)+(1.0d0-pr_non_zombie_aw_s(q_l,a_l)))       
+    end do; end do; end do
+     
     open(unit=12, file=path_results//"results.txt")
         write(12,*),F,CCP,joint_pr,pr_d_a_n
     close(12)
@@ -394,6 +406,10 @@ function log_likelihood2(params_MLE)
         pr_d_a_n_av(a_l,n_l)=sum(pr_d_a_n(a_l,n_l,:)*pr_non_zombie_anv(n_l,a_l,:)*shares_n_a_v(a_l,n_l,:)) 
     end do;end do
     
+    do q_l=1,wealth_quantiles;do a_l=1,types_a
+        pr_d_wa(q_l,a_l)=sum(pr_d_a_n(a_l,1,:)*pr_non_zombie_wav(q_l,a_l,:)*share_v_wn(:,q_l,1,a_l))
+    end do; end do
+    
     do n_l=1,3;do ind=1,2*P_max-1
         pr_N_n_av(ind,n_l)=sum(pr_N_n_v(ind,n_l,:)*shares_v_n(:,n_l)) !pr_N_n_v(:,2,4)
     end do;end do
@@ -408,13 +424,10 @@ function log_likelihood2(params_MLE)
     
     pr_n_av=pr_n_av*sum(pr_non_zombie_i(:))/dble(plots_i)
     pr_n_av(1)=pr_n_av(1)+(1.0d0-sum(pr_non_zombie_i(:))/dble(plots_i))
-
-    
-
     
 
     log_likelihood2=sum((pr_d_a_n_av-moment_own_nxa_data)**2.0d0)+(pr_n_av(1)-pr_little_n_data(1))**2.0d0 + &
-                    sum((pr_N_n_av(1,:)-pr_N_n_data(1,:))**2.0d0) 
+                    sum((pr_N_n_av(1,:)-pr_N_n_data(1,:))**2.0d0) + sum((pr_d_wa-moment_wa_data)**2.0d0)
     
     if (isnan(log_likelihood2)) then
         print*,'paused in estimation2'
@@ -430,7 +443,7 @@ function log_likelihood2(params_MLE)
     close(12)
     
     OPEN(UNIT=12, FILE=path_results//"modl"//"_wealth.txt")
-        write(12,*),pr_d_w_av
+        write(12,*),pr_d_wa
     close(12)
     
     OPEN(UNIT=12, FILE=path_results//"modl"//"_BigN_n2.txt")

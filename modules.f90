@@ -1,7 +1,7 @@
 module dimensions
     implicit none
     integer,parameter::P_max=8 ! Set the maximum number of plots in an adjacency
-    integer,parameter::K=5,par=6,M=2,COV=4,types_a=4 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
+    integer,parameter::K=5,par=7,M=2,COV=4,types_a=3 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
     integer,parameter::sims=5
 end
     
@@ -9,7 +9,8 @@ module cadastral_maps
     use dimensions
     implicit none
     double precision:: rho_sc=0.9d0,shrinkage_p
-    integer,parameter::plots_in_map=1909,villages=14,unobs_types=3,wealth_quantiles=4
+    double precision,dimension(2):: logit_constrain_p
+    integer,parameter::plots_in_map=1909,villages=14,unobs_types=3,wealth_quantiles=3
     integer,parameter,dimension(villages)::plots_v=(/1794,302,912,517,292,535,939,637,405,837,973,1844,443,1909/) !plots in each village
     double precision,dimension(villages):: mean_area
     integer,dimension(plots_in_map,plots_in_map,villages)::neighbors_map
@@ -17,8 +18,7 @@ module cadastral_maps
     integer,dimension(plots_in_map,villages,sims)::unobs_types_i
     integer,dimension(plots_in_map,P_max,villages,sims)::neighbors !identify neighbors for each plot in the map
     !Zombie pr
-    double precision,dimension(types_a):: pr_non_zombie=0.50d0
-    integer,dimension(plots_in_map,villages,sims)::active_plots
+    integer,dimension(plots_in_map,villages,sims)::active_plots,wealth_plots
     character(len=92)::file_map="C:\Users\jbueren\Google Drive\overdrilling\fortran\mandal_flow\cadastral_maps\fortran_files\"
     end
     
@@ -48,7 +48,7 @@ module primitives
     double precision,dimension(types_a)::area=(/1.0d0,2.0d0,3.0d0,5.1d0/) 
     double precision,dimension(types_a-1)::area_lims=(/1.3d0,2.3d0,4.0d0/) 
     !wealth quantiles
-    double precision,dimension(wealth_quantiles-1)::w_lims=(/12.37d0,12.97d0,15.0d0/) 
+    double precision,dimension(wealth_quantiles-1)::w_lims=(/12.59d0,13.33d0/) 
     !pr of unobserved heterogeneity type
     double precision,dimension(unobs_types)::pr_unobs_t=1.0d0/dble(unobs_types)
     double precision::pr_z_type2_to_pr_z=1.0d0
@@ -75,27 +75,29 @@ use cadastral_maps
     integer::bootstrap=0
     
     !Data
-    integer,dimension(plots_i)::V_type,P_type,A_type,impute_i,can_be_zombie_i
+    integer,dimension(plots_i)::V_type,P_type,A_type,impute_i,can_be_zombie_i,wealth_q
     double precision,dimension(plots_i)::wealth_i
     double precision,dimension(unobs_types,plots_i)::UHE_type
     double precision,dimension(unobs_types,plots_i)::UHE_type_model
     integer,dimension(plots_i)::modal_UHE_type
     integer,dimension(T_sim,plots_i,simulations)::drilling_it
-    integer,dimension(T_sim,plots_i)::n_data,wealth_q !number of wells in reference plot
+    integer,dimension(T_sim,plots_i)::n_data !number of wells in reference plot
     double precision,dimension(max_NFW+1,T_sim,plots_i)::Pr_N_data !pr of number of functioning wells in the adjacency
     integer,dimension(T_sim,plots_i)::MNF
     integer,dimension(T_sim,plots_i)::modal_N !pr of number of functioning wells in the adjacency
     double precision,dimension(plots_i)::N_bar
     double precision,dimension(types_a,2)::moment_own_nxa_data
-    double precision,dimension(wealth_quantiles)::moment_w_data
+    double precision,dimension(wealth_quantiles,types_a)::moment_wa_data
     double precision,dimension(villages)::shares_v
     double precision,dimension(types_a,3,villages)::shares_n_a_v
     double precision,dimension(types_a,villages)::shares_a_v
     double precision,dimension(types_a,villages,wealth_quantiles)::shares_w_v
     double precision,dimension(villages,3)::shares_v_n
+    double precision,dimension(villages,wealth_quantiles,3,types_a)::share_v_wn
     double precision,dimension(2*P_max-1,3)::pr_N_n_data
     double precision,dimension(3)::pr_little_n_data
-    
+    double precision,dimension(plots_i,types_a)::p_w_a
+    integer,dimension(types_a)::counter_w_a
     !Unobsverded heterogeneity from beliefs
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::Pr_u_X
     

@@ -4,7 +4,7 @@ subroutine load_cadastral_maps()
     character(LEN=1)::s_c1
     character(LEN=2)::s_c2
     integer::v_l,i,j,ind,a_l,j2,ind2,s_l
-    double precision::u,u_m
+    double precision::u,u_m,aux_w
     double precision,dimension(villages,plots_in_map)::areas
     integer,dimension(villages,plots_in_map)::area_type
     integer,dimension(P_max,types_a,villages,unobs_types)::counter_type
@@ -47,16 +47,27 @@ subroutine load_cadastral_maps()
             read(12,*),neighbors_map(1:plots_v(v_l),1:plots_v(v_l),v_l)
         close(12)
         
-        !Set zombie plots
+        !Set wealth & zombie plots
         do i=1,plots_v(v_l)
             call RANDOM_NUMBER(u)
-            if (u<pr_non_zombie(area_type(v_l,i))) then
+            aux_w=p_w_a(floor(u*dble(counter_w_a(area_type(v_l,i)))+1),area_type(v_l,i))-shrinkage_p
+            if (aux_w<w_lims(1))then 
+                wealth_plots(i,v_l,s_l)=1
+            elseif (aux_w<w_lims(2))then 
+                wealth_plots(i,v_l,s_l)=2
+            else
+                wealth_plots(i,v_l,s_l)=3
+            end if
+            call RANDOM_NUMBER(u)
+            if (u<1.0d0/(1.0d0+exp(-(logit_constrain_p(1)+logit_constrain_p(2)*aux_w)))) then
                 active_plots(i,v_l,s_l)=1
             else
                 active_plots(i,v_l,s_l)=0 
             end if
         end do
-        
+        if (s_l==1) then
+            print*,'unconstrained in map: ',v_l,dble(sum(active_plots(1:plots_v(v_l),v_l,s_l)))/dble(plots_v(v_l))
+        end if
 
         !Store which are my neighbors
         do i=1,plots_in_map

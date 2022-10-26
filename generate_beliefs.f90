@@ -36,6 +36,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     integer,dimension(3,types_a)::count_a_n
     double precision,dimension(2*P_max-1,3),intent(out)::pr_N_n
     double precision,dimension(3,types_a),intent(out)::pr_na
+
     
     !active_plots(415,1,1)
     
@@ -84,6 +85,8 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     it=0
 
     count_a_n=0
+
+    
     do s_l=1,sims;
         do t_l=1,T-1;
         !print*,t_l

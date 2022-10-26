@@ -29,15 +29,9 @@ subroutine counterfactual_2(params_MLE)
     
      rho_sc=params_MLE(6)
      shrinkage_p=params_MLE(5)
+     logit_constrain_p=(/params_MLE(4),params_MLE(7)/)
      
-     do i_l=1,plots_i
-        pr_non_zombie_i(i_l)=1.0d0/(1.0d0+exp(-(params_MLE(4)+0.0d0*wealth_i(i_l))))
-        counter_a(A_type(i_l))=counter_a(A_type(i_l))+1
-        pr_non_zombie_a(A_type(i_l))=pr_non_zombie_a(A_type(i_l))+pr_non_zombie_i(i_l)
-     end do
-    
-     print*,pr_non_zombie_a/dble(counter_a)
-    pr_non_zombie=pr_non_zombie_a/dble(counter_a)*shrinkage_p
+
      call load_cadastral_maps()
     
     tau_grid(1)=0.0d0

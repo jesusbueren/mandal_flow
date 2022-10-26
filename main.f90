@@ -60,13 +60,8 @@ call load_estimation_data()
 !
 !print*,'end simulation'
 !Compute moments in the data
-call compute_moments(dble(drilling_it(:,:,1)),"data",empty,moment_own_nxa_data,moment_w_data)
-OPEN(UNIT=12, FILE=path_results//"data"//"_own_nxa.txt")
-    write(12,*),moment_own_nxa_data
-close(12)
-OPEN(UNIT=12, FILE=path_results//"data"//"_wealth.txt")
-    write(12,*),moment_w_data
-close(12)
+call compute_moments(dble(drilling_it(:,:,1)),"data")
+
 
 print*,'Start estimation'
 !Generate a random CCP for computing initial beliefs
