@@ -1,7 +1,7 @@
 subroutine expected_productivity(params,a,Ef_v,v_l,u_l)
     use dimensions;use primitives
     implicit none
-    double precision,dimension(2),intent(in)::params
+    double precision,dimension(3),intent(in)::params
     double precision,intent(in)::a
     double precision,dimension(2*P_max-1,3,P_max),intent(out)::Ef_v
     integer,intent(in)::v_l,u_l
@@ -13,7 +13,7 @@ subroutine expected_productivity(params,a,Ef_v,v_l,u_l)
     theta_p=params(1)
     beta_p=params(2)
     gamma_p=1.0d0-params(2)
-    cost_p=0.0d0
+    cost_p=params(3)
     !y=theta*( q^beta * a^gamma)
     Ef_v=sqrt(-1.0d0)
     !Compute expected productivity and generate the vector of it with the from 2*P-1 form

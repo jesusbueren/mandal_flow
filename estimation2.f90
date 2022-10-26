@@ -35,19 +35,21 @@ subroutine estimation2(params_MLE,log_likeli)
     max_mle=99999999.0d0
     
     !Flow p
-    p_g(1,1)=0.38d0 
+    p_g(1,1)=0.1d0 
     !Productivity p
-    p_g(1,2)=7.4d0
+    p_g(1,2)=28.0d0
     !Var taste shock
-    p_g(1,3)=2.64d0
+    p_g(1,3)=2.56d0
     !Intercept logit contrained
-    p_g(1,4)=-6.5d0
+    p_g(1,4)=-18d0
     !Shrinkage parameter 
-    p_g(1,5)=5.1d0  
+    p_g(1,5)=1.6d0  
     !Spatial correlation
     p_g(1,6)=0.9d0 
     !wealth effect logit contrained
-    p_g(1,7)=0.7d0
+    p_g(1,7)=1.5d0
+    !cost per acre
+    p_g(1,8)=20.0d0
 
 
 
@@ -63,7 +65,7 @@ subroutine estimation2(params_MLE,log_likeli)
         p_g(p_l,2:3)=log(p_g(p_l,2:3))
         p_g(p_l,6)=log(p_g(p_l,6)/(1.0d0-p_g(p_l,6)))
         y(p_l)=log_likelihood2(p_g(p_l,:))  
-        !read*,pause_k
+        read*,pause_k
     end do 
 
     !print*,'likelihood_ini',y(1)
@@ -141,6 +143,7 @@ function log_likelihood2(params_MLE)
     params(5)=params_MLE(5)
     params(6)=1.0d0/(1.0d0 + exp(-params_MLE(6))) 
     params(7)=params_MLE(7) 
+    params(8)=params_MLE(8) 
 
     rho_sc=params(6)
     shrinkage_p=params(5)

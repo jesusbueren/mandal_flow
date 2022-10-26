@@ -28,7 +28,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     
     !Compute expected productivity 
     do a_l=1,types_a;do u_l=1,unobs_types
-        call expected_productivity((/params(2),params(1)/),area(a_l),Ef_v(:,:,:,a_l,v_l,u_l),v_l,u_l) !Ef_v(1,:,1,1,1,:)
+        call expected_productivity((/params(2),params(1),params(8)/),area(a_l),Ef_v(:,:,:,a_l,v_l,u_l),v_l,u_l) !Ef_v(1,:,1,1,1,:)
         !if ( a_l==2 .and. u_l==3) then
         !    print*,'Type',u_l,a_l
         !    print*, 'private return',(ef_v(4,2,8,a_l,v_l,u_l))/(1.0d0-beta*(1.0d0-pi_f_v(1,2,1,v_l,u_l)))-c_s-c_d/(1-PI_s(1,v_l))
