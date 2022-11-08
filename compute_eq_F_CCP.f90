@@ -75,7 +75,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
                             ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,u_l) &
                             ,P_l &
                             ,CCP(1:2*P_l-1,:,P_l,a_l,u_l),CCP2(1:2*P_l-1,:,P_l,a_l,u_l),v_l,u_l & 
-                            ,V_social(1:2*P_l-1,:,P_l,a_l,u_l),a_l) !V_social(1,1,1,4,:) CCP(1,:,1,4,3) V_social(1,1,1,4,:) CCP(1,:,1,4,:)
+                            ,V_social(1:2*P_l-1,:,P_l,a_l,u_l),a_l) !V_fct(1,1,1,4,:) CCP(1,:,1,4,3) V_social(1,1,1,4,:) CCP(1,:,1,4,:)
     end do;
     !if (minval(CCP(1:2*P_l-1,:,P_l,2,u_l)-CCP(1:2*P_l-1,:,P_l,1,u_l))<0.0d0) then
     !    print*,'ufff',minval(CCP(1:2*P_l-1,:,P_l,2,u_l)-CCP(1:2*P_l-1,:,P_l,1,u_l))

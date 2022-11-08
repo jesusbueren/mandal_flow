@@ -11,6 +11,7 @@ subroutine load_cadastral_maps()
     integer,dimension(P_max,2)::PA_stat
     integer,dimension(1)::seed=321
     
+    call random_seed(PUT=seed)
     PA_type=-9
     
     OPEN(UNIT=12, FILE=file_map//"area_type.csv")
