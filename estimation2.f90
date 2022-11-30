@@ -34,22 +34,22 @@ subroutine estimation2(params_MLE,log_likeli)
     
     max_mle=99999999.0d0
     
-    !Flow p
-    p_g(1,1)=0.37d0 
+    !share water (CES)
+    p_g(1,1)=0.667d0 
     !Productivity p
-    p_g(1,2)=17.4d0
+    p_g(1,2)=10.108d0
     !Var taste shock
-    p_g(1,3)=2.5d0
+    p_g(1,3)=1.813d0
     !Intercept logit contrained
-    p_g(1,4)=-7.1d0
+    p_g(1,4)=-28.769d0
     !Shrinkage parameter 
-    p_g(1,5)=1.82d0  
+    p_g(1,5)=0.464d0  
     !Spatial correlation
-    p_g(1,6)=0.95d0 
-    !wealth effect logit contrained
-    p_g(1,7)=0.57d0
-    !Area curvature
-    p_g(1,8)=0.10d0
+    !p_g(1,6)=0.95d0 
+    !wealth effect logit constrained
+    p_g(1,6)=2.559d0
+    !flow p
+    p_g(1,7)=0.312d0
 
 
 
@@ -63,8 +63,8 @@ subroutine estimation2(params_MLE,log_likeli)
     do p_l=1,par+1
         p_g(p_l,1)=log(p_g(p_l,1)/(1.0d0-p_g(p_l,1)))
         p_g(p_l,2:3)=log(p_g(p_l,2:3))
-        p_g(p_l,6)=log(p_g(p_l,6)/(1.0d0-p_g(p_l,6)))
-        p_g(p_l,8)=log(p_g(p_l,8)/(1.0d0-p_g(p_l,8)))
+        !p_g(p_l,6)=log(p_g(p_l,6)/(1.0d0-p_g(p_l,6)))
+        p_g(p_l,7)=log(p_g(p_l,7))
         y(p_l)=log_likelihood2(p_g(p_l,:))  
         if (p_l<par+1)then
             xi(p_l,p_l)=1.0d0
@@ -75,15 +75,14 @@ subroutine estimation2(params_MLE,log_likeli)
     !print*,'likelihood_ini',y(1)
         
     ftol=1.0d-3
-    
     call amoeba(p_g,y,ftol,log_likelihood2,iter)
-    !call powell(p_g(1,:),xi,ftol,iter,fret)
+    call powell(p_g(1,:),xi,ftol,iter,fret)
     
     log_likeli=y(1)
     p_g(1,1)=1.0d0/(1.0d0+exp(-p_g(1,1)))
     p_g(1,2:3)=exp(p_g(1,2:3))
-    p_g(1,6)=1.0d0/(1.0d0+exp(-p_g(1,6)))
-    p_g(1,8)=1.0d0/(1.0d0+exp(-p_g(1,8)))
+    !p_g(1,6)=1.0d0/(1.0d0+exp(-p_g(1,6)))
+    p_g(1,7)=exp(p_g(1,7))
 
 
 
@@ -147,13 +146,13 @@ function log_likelihood2(params_MLE)
     params(2:3)=exp(params_MLE(2:3))
     params(4)=params_MLE(4)
     params(5)=params_MLE(5)
-    params(6)=1.0d0/(1.0d0 + exp(-params_MLE(6))) 
-    params(7)=params_MLE(7) 
-    params(8)=1.0d0/(1.0d0 + exp(-params_MLE(8)))  
+    !params(6)=1.0d0/(1.0d0 + exp(-params_MLE(6))) 
+    params(6)=params_MLE(6) 
+    params(7)=exp(params_MLE(7))
 
-    rho_sc=params(6)
+    !rho_sc=params(6)
     shrinkage_p=params(5)
-    logit_constrain_p=(/params(4),params(7)/)
+    logit_constrain_p=(/params(4),params(6)/)
     
     counter_a=0
     pr_non_zombie_a_s=0.0d0
@@ -168,6 +167,12 @@ function log_likelihood2(params_MLE)
     end do
     pr_non_zombie_a_s=pr_non_zombie_a_s/dble(counter_a)
     pr_non_zombie_aw_s=pr_non_zombie_aw_s/dble(counter_aw) 
+    
+    if (1.0d0/(1.0d0+exp(-(logit_constrain_p(1)+logit_constrain_p(2)*(12.97-shrinkage_p))))<0.1d0) then
+        go to 1
+    end if
+     
+    
 
     print*,'Non-constrained pr sample',pr_non_zombie_a_s
 
@@ -434,13 +439,16 @@ function log_likelihood2(params_MLE)
     pr_n_av=pr_n_av*sum(pr_non_zombie_i(:))/dble(plots_i)
     pr_n_av(1)=pr_n_av(1)+(1.0d0-sum(pr_non_zombie_i(:))/dble(plots_i))
     
+    
+    print*,sum(pr_N_n_av(1,:)*pr_n_av),sum(pr_N_n_data(1,:)*pr_little_n_data)
 
     log_likelihood2=sum(((pr_d_a_n_av(:,2)-moment_own_nxa_data(:,2))/moment_own_nxa_data(:,2))**2.0d0)+((pr_n_av(1)-pr_little_n_data(1))/pr_little_n_data(1))**2.0d0 + &
-                    sum(((pr_N_n_av(1,:)-pr_N_n_data(1,:))/pr_N_n_data(1,:))**2.0d0) + sum(((pr_d_wa-moment_wa_data)/moment_wa_data)**2.0d0)
+                     sum(((pr_d_wa-moment_wa_data)/moment_wa_data)**2.0d0) + ((sum(pr_N_n_av(1,:)*pr_n_av)-sum(pr_N_n_data(1,:)*pr_little_n_data))/sum(pr_N_n_data(1,:)*pr_little_n_data))**2.0d0
     
     if (isnan(log_likelihood2)) then
         print*,'paused in estimation2'
         print*,pr_N_n_v(1,:,:)
+1        log_likelihood2=100.0d0
         !read*, end_k
     end if
     

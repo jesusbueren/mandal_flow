@@ -2,8 +2,8 @@
 	USE nrtype; USE nrutil, ONLY : assert_eq,nrerror
 	USE nr, ONLY : linmin
 	IMPLICIT NONE
-	REAL(DP), DIMENSION(8), INTENT(INOUT) :: p
-	REAL(DP), DIMENSION(8,8), INTENT(INOUT) :: xi
+	REAL(DP), DIMENSION(7), INTENT(INOUT) :: p
+	REAL(DP), DIMENSION(7,7), INTENT(INOUT) :: xi
 	INTEGER(I4B), INTENT(OUT) :: iter
 	REAL(DP), INTENT(IN) :: ftol
 	REAL(DP), INTENT(OUT) :: fret
@@ -11,7 +11,7 @@
 		FUNCTION log_likelihood2(p)
 		USE nrtype
 		IMPLICIT NONE
-		REAL(DP), DIMENSION(8), INTENT(IN) :: p
+		REAL(DP), DIMENSION(7), INTENT(IN) :: p
 		REAL(DP) :: log_likelihood2
 		END FUNCTION log_likelihood2
 	END INTERFACE

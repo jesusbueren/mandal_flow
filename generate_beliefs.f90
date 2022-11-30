@@ -42,7 +42,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     
     
     !Set number of iterations
-    T=4000000/plots_v(v_l) 
+    T=8000000/plots_v(v_l) 
     its=T-burn_t-1
     allocate ( NPV(its,sims))
     allocate ( total_N(its,sims))

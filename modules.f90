@@ -1,8 +1,8 @@
 module dimensions
     implicit none
     integer,parameter::P_max=8 ! Set the maximum number of plots in an adjacency
-    integer,parameter::K=5,par=8,M=2,COV=4,types_a=4 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
-    integer,parameter::sims=20
+    integer,parameter::K=5,par=7,M=2,COV=4,types_a=4 !K: points of support of flow; M:types of moonzoons; type_a: types of areas
+    integer,parameter::sims=1!20
 end
     
 module cadastral_maps
@@ -10,7 +10,7 @@ module cadastral_maps
     implicit none
     double precision:: rho_sc=0.9d0,shrinkage_p
     double precision,dimension(2):: logit_constrain_p
-    integer,parameter::plots_in_map=1909,villages=14,unobs_types=3,wealth_quantiles=3
+    integer,parameter::plots_in_map=1909,villages=14,unobs_types=2,wealth_quantiles=3
     integer,parameter,dimension(villages)::plots_v=(/1794,302,912,517,292,535,939,637,405,837,973,1844,443,1909/) !plots in each village
     double precision,dimension(villages):: mean_area
     integer,dimension(plots_in_map,plots_in_map,villages)::neighbors_map
@@ -39,7 +39,7 @@ module primitives
     double precision,dimension(2*P_max,villages)::PI_s
     double precision,dimension(2*P_max-1,3,P_max,villages)::PI_s_v
     !c_d: fixed cost of failing to drill;c_s: fixed cost of succeeding to drill; c_e: cost of electricity by well
-    double precision::c_s=43.0d0,beta=0.95d0,c_d=22.0d0,c_e=8.5d0 
+    double precision::c_s=43.0d0,beta=0.90d0,c_d=22.0d0,c_e=8.5d0 
     !extreme value distribution shocks
     double precision,parameter::gamma=0.577215664901533d0
     double precision::v_nod=0.0d0
@@ -50,7 +50,7 @@ module primitives
     !wealth quantiles
     double precision,dimension(wealth_quantiles-1)::w_lims=(/12.59d0,13.33d0/) 
     !pr of unobserved heterogeneity type
-    double precision,dimension(unobs_types)::pr_unobs_t=1.0d0/dble(unobs_types)
+    double precision,dimension(unobs_types)::pr_unobs_t=(/0.364d0, 1.0d0-0.364d0/)!1.0d0/dble(unobs_types)
     double precision::pr_z_type2_to_pr_z=1.0d0
     !Taxation parameters
     double precision::T_g=0.0d0,tau=0.0d0,tau_per_N=0.0d0

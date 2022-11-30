@@ -10,7 +10,7 @@ subroutine counterfactual_2(params_MLE)
     double precision::mle
     integer::v_l,p_l,it,i_l,j_l,ind
     character::end_key
-    integer,parameter::nkk=20
+    integer,parameter::nkk=25
     double precision,dimension(nkk)::tau_grid
     double precision,dimension(plots_i,unobs_types)::posterior_type
     double precision,dimension(types_a,2)::pr_d_a_n
@@ -27,14 +27,14 @@ subroutine counterfactual_2(params_MLE)
         end function log_likelihood2
      end interface
     
-     rho_sc=params_MLE(6)
+    ! rho_sc=params_MLE(6)
      shrinkage_p=params_MLE(5)
-     logit_constrain_p=(/params_MLE(4),params_MLE(7)/)
+     logit_constrain_p=(/params_MLE(4),params_MLE(6)/)
      
 
      call load_cadastral_maps()
     
-    tau_grid(1)=0.0d0
+    tau_grid(1)=-5.0d0
     do p_l=2,nkk
         tau_grid(p_l)=tau_grid(p_l-1)+1.0d0
     end do
