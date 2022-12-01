@@ -5,9 +5,9 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types),intent(in)::V_fct,V_social
     double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types),intent(in)::Ef_v 
     integer,dimension(plots_in_map,1),intent(inout)::n_initial
-    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,unobs_types),intent(out)::F_new
+    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,types_a),intent(out)::F_new
     integer,intent(in)::v_l
-    integer(8),dimension(2*P_max-1,3,3,P_max,unobs_types),intent(out)::iterations
+    integer(8),dimension(2*P_max-1,3,3,P_max,types_a),intent(out)::iterations
     double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types),intent(out)::joint_pr
     double precision,dimension(types_a,2),intent(out)::pr_d_a_n
     integer(8),dimension(2*P_max-1,3,P_max,types_a,unobs_types)::counter_u
@@ -15,17 +15,16 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     integer(8),dimension(plots_in_map,3)::state,state_old
     integer(8),dimension(plots_in_map)::drill_old
     integer(8)::i_l,j_l,t_l,ind,N_all,n_l,P,A,P_l,n_l2,it,m_l,it_min,a_l,u_l,ind2,N_all2,i,r_l,s_l
-    double precision::u_d,u_s,u_f,u_m,it2
+    double precision::u_d,u_s,u_f,u_m,it2,it3
     integer(8):: its
-    double precision,allocatable,dimension(:,:)::NPV,total_N,NPV_PV,CCP_av,total_f
+    double precision,allocatable,dimension(:,:)::NPV,total_N,NPV_PV,total_f,output,cultivated_area,high_type_fraction
     integer,allocatable,dimension(:,:,:)::pr_N_n_it_c
     double precision,allocatable,dimension(:,:,:,:)::NPV_by_a_n
-    !double precision,dimension(its)::NPV,total_N,NPV_PV,CCP_av
     double precision,intent(out)::mean_N,social_output,private_output
-    integer(8),dimension(2*P_max-1,2*P_max-1,3,3,P_max,unobs_types)::beliefs_c
+    integer(8),dimension(2*P_max-1,2*P_max-1,3,3,P_max,types_a)::beliefs_c
     integer(8),dimension(1)::seed=321,seed2
     integer(8),parameter::burn_t=100
-    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,unobs_types)::F
+    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,types_a)::F
     double precision,dimension(P_max)::dist
     double precision,dimension(2*P_max-1)::CCP_aux
     character::continue_k
@@ -45,10 +44,12 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     T=8000000/plots_v(v_l) 
     its=T-burn_t-1
     allocate ( NPV(its,sims))
+    allocate ( output(its,sims))
+    allocate ( cultivated_area(its,sims))
+    allocate ( high_type_fraction(its,sims))
     allocate ( total_N(its,sims))
     allocate ( total_f(its,sims))
     allocate ( NPV_PV(its,sims))
-    allocate ( CCP_av(its,sims))
     allocate ( pr_N_n_it_c(2*P_max-1,3,sims))
     allocate ( NPV_by_a_n(its,sims,types_a,3))
 
@@ -56,9 +57,9 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     !prior of beliefs
     F_new=-9.0
     iterations=0
-    do P_l=1,P_max;do ind=1,2*P_l-1; do n_l=1,3; do n_l2=1,1; do u_l=1,unobs_types
-        F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)=1.0d0/dble(2*P_l-1)
-        iterations(ind,n_l,n_l2,P_l,u_l)=1
+    do P_l=1,P_max;do ind=1,2*P_l-1; do n_l=1,3; do n_l2=1,1; do a_l=1,types_a
+        F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=1.0d0/dble(2*P_l-1)
+        iterations(ind,n_l,n_l2,P_l,a_l)=1
     end do;end do;end do;end do;end do
 
     
@@ -100,9 +101,12 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
 
         if (t_l>burn_t) then
             NPV(t_l-burn_t,s_l)=0.0d0
+            output(t_l-burn_t,s_l)=0.0d0
+            cultivated_area(t_l-burn_t,s_l)=0.0d0
+            high_type_fraction(t_l-burn_t,s_l)=0.0d0
             NPV_PV(t_l-burn_t,s_l)=0.0d0
-            CCP_av(t_l-burn_t,s_l)=0.0d0
             it2=0.0d0
+            it3=0.0d0            
         end if
         if (t_l>1) then
             state(:,1)=n_initial(:,1)
@@ -151,23 +155,28 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                 state(i_l,3)=ind
                 !Count transitions (in the first iteration state_old is undefined: no problem)
                 if (t_l>=burn_t) then
-                    beliefs_c(state_old(i_l,3),state(i_l,3),state_old(i_l,1),1,P,unobs_types_i(i_l,v_l,s_l))=&
-                    beliefs_c(state_old(i_l,3),state(i_l,3),state_old(i_l,1),1,P,unobs_types_i(i_l,v_l,s_l))+1
+                    beliefs_c(state_old(i_l,3),state(i_l,3),state_old(i_l,1),1,P,A)=&
+                    beliefs_c(state_old(i_l,3),state(i_l,3),state_old(i_l,1),1,P,A)+1
                     !Compute joint distribution state variables and unobserved heterogeneity type
                     counter_u(state(i_l,3),state(i_l,1),P,A,unobs_types_i(i_l,v_l,s_l))=counter_u(state(i_l,3),state(i_l,1),P,A,unobs_types_i(i_l,v_l,s_l))+1
                 end if
                 !Compute NPV
                 if (t_l>burn_t) then  
-                    if (n_l==1 )then                     
-                        it2=it2+1.0d0
-                        CCP_av(t_l-burn_t,s_l)=(it2-1.0d0)/it2*CCP_av(t_l-burn_t,s_l)+1.0d0/it2*CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))
-                    elseif (n_l==2)then                     
-                        it2=it2+1.0d0
-                        CCP_av(t_l-burn_t,s_l)=(it2-1.0d0)/it2*CCP_av(t_l-burn_t,s_l)+1.0d0/it2*CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))
-                    end if
+                    it2=it2+1.0d0
                     pr_N_n_it_c(ind,n_l,s_l)=pr_N_n_it_c(ind,n_l,s_l)+1.0d0
-                    NPV_PV(t_l-burn_t,s_l)=dble(i_l-1)/dble(i_l)*NPV_PV(t_l-burn_t,s_l)+1.0d0/dble(i_l)*(V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))
-                    NPV(t_l-burn_t,s_l)=dble(i_l-1)/dble(i_l)*NPV(t_l-burn_t,s_l)+1.0d0/dble(i_l)*(V_social(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))
+                    NPV_PV(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*NPV_PV(t_l-burn_t,s_l)+1.0d0/dble(it2)*(V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))/area(A)
+                    NPV(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*NPV(t_l-burn_t,s_l)+1.0d0/dble(it2)*(V_social(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))/area(A)
+                    output(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*output(t_l-burn_t,s_l)+1.0d0/dble(it2)*(Ef_v(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))-c_e*dble(n_l-1))/area(A)
+                    total_N(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*total_N(t_l-burn_t,s_l)+1.0d0/dble(it2)*(n_l-1)
+                    if (n_l>1) then
+                        it3=it3+1
+                        cultivated_area(t_l-burn_t,s_l)=cultivated_area(t_l-burn_t,s_l)+area(A)
+                        if (unobs_types_i(i_l,v_l,s_l)==unobs_types) then
+                            high_type_fraction(t_l-burn_t,s_l)=dble(it3-1)/dble(it3)*high_type_fraction(t_l-burn_t,s_l)+1.0d0/dble(it3)*1.0d0
+                        else
+                            high_type_fraction(t_l-burn_t,s_l)=dble(it3-1)/dble(it3)*high_type_fraction(t_l-burn_t,s_l)+1.0d0/dble(it3)*0.0d0
+                        end if
+                    end if
                     count_a_n(n_l,A)=count_a_n(n_l,A)+1
                     NPV_by_a_n(t_l-burn_t,s_l,A,n_l)=dble(count_a_n(n_l,A)-1)/dble(count_a_n(n_l,A))*NPV_by_a_n(t_l-burn_t,s_l,A,n_l)+1.0d0/dble(count_a_n(n_l,A))*(V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))
                     if (n_l<3) then
@@ -199,9 +208,6 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                             u_f=draw(5) 
                             if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))) then !failure of the previous well
                                 n_initial(i_l,1)=n_l
-                                if (t_l>burn_t) then
-                                    total_f(t_l-burn_t,s_l)=total_f(t_l-burn_t,s_l)+1
-                                end if
                             else
                                 n_initial(i_l,1)=n_l+1
                             end if
@@ -209,9 +215,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                             u_f=draw(6) 
                             if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))) then !failure of the previous well PI_fm(:)
                                 n_initial(i_l,1)=n_l-1
-                                if (t_l>burn_t) then
-                                    total_f(t_l-burn_t,s_l)=total_f(t_l-burn_t,s_l)+1
-                                end if
+
                             else
                                 n_initial(i_l,1)=n_l
                             end if
@@ -220,9 +224,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                         u_f=draw(7) 
                         if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))) then !failure of the previous well
                             n_initial(i_l,1)=n_l-1
-                            if (t_l>burn_t) then
-                                total_f(t_l-burn_t,s_l)=total_f(t_l-burn_t,s_l)+1
-                            end if
+
                         else
                             n_initial(i_l,1)=n_l
                         end if 
@@ -231,24 +233,15 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                     u_f=draw(8) 
                     if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))**2) then !failure of the two wells !PI_fm(:,1,3,1)
                         n_initial(i_l,1)=n_l-2
-                        if (t_l>burn_t) then
-                            total_f(t_l-burn_t,s_l)=total_f(t_l-burn_t,s_l)+2
-                        end if
+
                     elseif (u_f<(1.0d0-PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l)))**2+PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))**2) then !failure of none
                         n_initial(i_l,1)=n_l
                     else !failure of one
                         n_initial(i_l,1)=n_l-1
-                        if (t_l>burn_t) then
-                            total_f(t_l-burn_t,s_l)=total_f(t_l-burn_t,s_l)+1
-                        end if
+
                     end if 
                 else
                     print*,'error in gen beliefs 2'
-                end if
-            else
-                if (t_l>burn_t) then   
-                    NPV(t_l-burn_t,s_l)=dble(i_l-1)/dble(i_l)*NPV(t_l-burn_t,s_l)+1.0d0/dble(i_l)*0.0d0
-                    NPV_PV(t_l-burn_t,s_l)=dble(i_l-1)/dble(i_l)*NPV_PV(t_l-burn_t,s_l)+1.0d0/dble(i_l)*0.0d0
                 end if
             end if                    
         end do
@@ -258,42 +251,41 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
         !Compute beliefs
         if (t_l>burn_t) then
             F=0.0d0
-            do P_l=2,P_max; do ind=1,2*P_l-1; do n_l=1,3; do n_l2=1,1;do u_l=1,unobs_types
+            do P_l=2,P_max; do ind=1,2*P_l-1; do n_l=1,3; do n_l2=1,1;do a_l=1,types_a
                     if (n_l==1 .and. n_l2==3) then
-                        F(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)=-9.0d0
-                    elseif(sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l))>0) then
-                        F(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)=dble(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l))/dble(sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)))
-                        iterations(ind,n_l,n_l2,P_l,u_l)=iterations(ind,n_l,n_l2,P_l,u_l)+sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l))
-                        F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)=dble(sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)))/dble(iterations(ind,n_l,n_l2,P_l,u_l))*F(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l) +&
-                                                    dble(iterations(ind,n_l,n_l2,P_l,u_l)-sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)))/dble(iterations(ind,n_l,n_l2,P_l,u_l))*F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l) 
-                        if (minval(F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l))<0)then 
+                        F(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=-9.0d0
+                    elseif(sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l))>0) then
+                        F(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=dble(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l))/dble(sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)))
+                        iterations(ind,n_l,n_l2,P_l,a_l)=iterations(ind,n_l,n_l2,P_l,a_l)+sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l))
+                        F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=dble(sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)))/dble(iterations(ind,n_l,n_l2,P_l,a_l))*F(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l) +&
+                                                    dble(iterations(ind,n_l,n_l2,P_l,a_l)-sum(beliefs_c(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)))/dble(iterations(ind,n_l,n_l2,P_l,a_l))*F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l) 
+                        if (minval(F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l))<0)then 
                             print*,'error in beliefs'
                         end if
                     end if
             end do;end do;end do;end do;end do
-            total_N(t_l-burn_t,s_l)=sum(n_initial(1:plots_v(v_l),1))-plots_v(v_l)  !total_N(:,1)
         end if
         it=it+1
     end do 
 end do 
     
-total_f(:,1)=sum(total_f,2)/sum(total_N,2) !total_f(1,:) total_N(1,:)
     ! In case I don't have observations for a given state, I consider that the transition pr 
     ! is the same for all possible future states
     it=0
     it2=0
-    do P_l=1,P_max; do ind=1,2*P_l-1; do n_l=1,3; do n_l2=1,1; do u_l=1,unobs_types
+    do P_l=1,P_max; do ind=1,2*P_l-1; do n_l=1,3; do n_l2=1,1; do a_l=1,types_a
         it2=it2+1
         it_min=300000
-        if (iterations(ind,n_l,n_l2,P_l,u_l)==0) then
+        if (iterations(ind,n_l,n_l2,P_l,a_l)==0) then
             it=it+1
-            F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)=1.0d0/dble(2*P_l-1)
+            F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=1.0d0/dble(2*P_l-1)
         end if
-        if (isnan(F_new(ind,1,n_l,n_l2,P_l,u_l))) then
+        if (isnan(F_new(ind,1,n_l,n_l2,P_l,a_l))) then
             print*,'error in generate beliefs'
         end if
-        F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)=F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)/sum(F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l))
+        F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)/sum(F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)) !F_new(2,2,1,1,4,:)
     end do;end do;end do;end do; end do
+    !Beliefs don't depend on n'
     F_new(:,:,:,2,:,:)=F_new(:,:,:,1,:,:)
     F_new(:,:,:,3,:,:)=F_new(:,:,:,1,:,:)
     F_new(:,:,1,3,:,:)=0.0d0
@@ -301,13 +293,17 @@ total_f(:,1)=sum(total_f,2)/sum(total_N,2) !total_f(1,:) total_N(1,:)
     !Beliefs for plots with no neighbors are degenerate: they know what the future will look like cond on their own outcomes
     P_l=1
     ind=1
-    do n_l=1,3; do n_l2=1,min(n_l+1,3);do u_l=1,unobs_types
-        F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,u_l)=1.0d0
+    do n_l=1,3; do n_l2=1,min(n_l+1,3);do a_l=1,types_a
+        F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=1.0d0
     end do;end do;end do
     
-    social_output=sum(NPV)/dble(its*sims)/mean_area(v_l)
-    private_output=sum(NPV_PV)/dble(its*sims)/mean_area(v_l)
-    mean_N=sum(total_N)/dble(its*sims)/dble(plots_v(v_l))
+    social_output=sum(NPV)/dble(its*sims)
+    private_output=sum(NPV_PV)/dble(its*sims)
+    print*,'total output',sum(output)/dble(its*sims)
+    print*,'cultivated area',sum(cultivated_area)/dble(its*sims)
+    print*,'Fraction of active plots from a high type ',sum(high_type_fraction)/dble(its*sims)
+    
+    mean_N=sum(total_N)/dble(its*sims)
     do n_l=1,3;do ind=1,2*P_max-1
         pr_N_n(ind,n_l)=dble(sum(pr_N_n_it_c(ind,n_l,:)))/dble(sum(pr_N_n_it_c(:,n_l,:))) 
     end do;end do

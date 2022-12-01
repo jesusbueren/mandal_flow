@@ -2,7 +2,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     use cadastral_maps; use dimensions; use primitives
     implicit none
     double precision,dimension(par),intent(in)::params
-    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,unobs_types),intent(out)::F
+    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,types_a),intent(out)::F
     double precision,dimension(2*P_max-1,2,P_max,types_a,unobs_types),intent(inout)::CCP
     integer,dimension(plots_in_map,1),intent(inout)::n_initial
     integer,dimension(plots_in_map,1)::n_start
@@ -16,7 +16,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::Ef_v !Ef_v: expected productivity Ef_v(1,3,1,4,2,:)
     double precision::dist,Mean_N_old
     integer::p_l,a_l,n_l,P_l2,ind,counter_all,counter_bad,u_l,it
-    integer(8),dimension(2*P_max-1,3,3,P_max,unobs_types)::iterations
+    integer(8),dimension(2*P_max-1,3,3,P_max,types_a)::iterations
     double precision,dimension(types_a,2),intent(out)::pr_d_a_n
     double precision,dimension(2*P_max-1,3),intent(out)::pr_N_n
     double precision,dimension(3,types_a),intent(out)::pr_na
@@ -40,7 +40,7 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
 !    F=1.0d0
     
 
-!   print*,'generating beliefs'
+
     it=0
     pr_n_u_old=0.0d0
     n_start=n_initial
@@ -60,19 +60,19 @@ subroutine compute_eq_F_CCP(params,F,CCP,V_fct,V_social,n_initial,v_l,mean_N,soc
     counter_all=0
     do P_l=1,P_max; do a_l=1,types_a; do u_l=1,unobs_types
         call value_fct_it(Ef_v(1:2*P_l-1,:,P_l,a_l,v_l,u_l)& !Ef_v(1:2*P_l-1,2,P_l,a_l,v_l,:)
-                            ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,u_l) &
+                            ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,a_l) &
                             ,P_l &
-                            ,CCP(1:2*P_l-1,:,P_l,a_l,u_l),v_l,u_l & !CCP(1,:,1,2,:)
-                            ,V_fct(1:2*P_l-1,:,P_l,a_l,u_l)) !V_fct(1:2*P_l-1,:,P_l,a_l,:)
+                            ,CCP(1:2*P_l-1,:,P_l,a_l,u_l),v_l,u_l & !CCP2(1,:,1,4,:)
+                            ,V_fct(1:2*P_l-1,:,P_l,a_l,u_l)) !V_fct(1,:,1,4,:)
         social=0
         call policy_fct_it(Ef_v(1:2*P_l-1,:,P_l,a_l,v_l,u_l)&
-                            ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,u_l) &
+                            ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,a_l) &
                             ,P_l &
                             ,CCP(1:2*P_l-1,:,P_l,a_l,u_l),CCP2(1:2*P_l-1,:,P_l,a_l,u_l),v_l,u_l &
                             ,V_fct(1:2*P_l-1,:,P_l,a_l,u_l),a_l)
         social=1
         call policy_fct_it(Ef_v(1:2*P_l-1,:,P_l,a_l,v_l,u_l)&
-                            ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,u_l) &
+                            ,F(1:2*P_l-1,1:2*P_l-1,:,:,P_l,a_l) &
                             ,P_l &
                             ,CCP(1:2*P_l-1,:,P_l,a_l,u_l),CCP2(1:2*P_l-1,:,P_l,a_l,u_l),v_l,u_l & 
                             ,V_social(1:2*P_l-1,:,P_l,a_l,u_l),a_l) !V_fct(1,1,1,4,:) CCP(1,:,1,4,3) V_social(1,1,1,4,:) CCP(1,:,1,4,:)
