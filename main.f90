@@ -79,14 +79,11 @@ close(12)
 
 
 !call bootstrap_se()
-!open(unit=12, file=path_results//"bootstrapped_parameters_85_nem.txt")
-!    read(12,*),params_mle
-!close(12)
+
 print*,'estimated parameters',params_MLE
-!end do
-!call generate_panel_sample(params_MLE)
+
 call counterfactual_2(params_MLE)
-!call counterfactual_1(params_MLE)
+
 
 !call transitional_dynamics(params_MLE)
 !call quantifiying_strategic_interactions(params_MLE)

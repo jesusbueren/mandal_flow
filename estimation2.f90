@@ -35,21 +35,21 @@ subroutine estimation2(params_MLE,log_likeli)
     max_mle=99999999.0d0
     
     !share water (CES)
-    p_g(1,1)=0.667d0 
+    p_g(1,1)=0.727d0 
     !Productivity p
-    p_g(1,2)=10.108d0
+    p_g(1,2)=18.878d0
     !Var taste shock
-    p_g(1,3)=1.813d0
+    p_g(1,3)=1.298d0
     !Intercept logit contrained
-    p_g(1,4)=-28.769d0
+    p_g(1,4)=-22.338d0
     !Shrinkage parameter 
-    p_g(1,5)=0.464d0  
+    p_g(1,5)=2.521d0  
     !Spatial correlation
     !p_g(1,6)=0.95d0 
     !wealth effect logit constrained
-    p_g(1,6)=2.559d0
+    p_g(1,6)=1.947d0
     !flow p
-    p_g(1,7)=0.312d0
+    p_g(1,7)=0.18d0
 
 
 
@@ -116,7 +116,7 @@ function log_likelihood2(params_MLE)
     character::pause_k
     double precision,dimension(types_a,2)::moment_own_nxa_model
     double precision,dimension(COV,1)::X
-    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,villages,unobs_types)::F
+    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,villages,types_a)::F
     integer,dimension(plots_in_map,villages)::n_dist,n_dist_opt
     double precision,dimension(villages)::mean_N,social_output,private_output
     double precision,dimension(2*P_max-1,3,P_max,types_a,villages,unobs_types)::joint_pr
@@ -442,13 +442,13 @@ function log_likelihood2(params_MLE)
     
     print*,sum(pr_N_n_av(1,:)*pr_n_av),sum(pr_N_n_data(1,:)*pr_little_n_data)
 
-    log_likelihood2=sum(((pr_d_a_n_av(:,2)-moment_own_nxa_data(:,2))/moment_own_nxa_data(:,2))**2.0d0)+((pr_n_av(1)-pr_little_n_data(1))/pr_little_n_data(1))**2.0d0 + &
-                     sum(((pr_d_wa-moment_wa_data)/moment_wa_data)**2.0d0) + ((sum(pr_N_n_av(1,:)*pr_n_av)-sum(pr_N_n_data(1,:)*pr_little_n_data))/sum(pr_N_n_data(1,:)*pr_little_n_data))**2.0d0
+    log_likelihood2=sum((pr_d_a_n_av-moment_own_nxa_data)**2.0d0/var_own_nxa)+(pr_n_av(1)-pr_little_n_data(1))**2.0d0/var_little_n(1) + &
+                     sum((pr_d_wa-moment_wa_data)**2.0d0/var_wa_data) + (sum(pr_N_n_av(1,:)*pr_n_av)-sum(pr_N_n_data(1,:)*pr_little_n_data))**2.0d0/var_N(1)
     
     if (isnan(log_likelihood2)) then
         print*,'paused in estimation2'
         print*,pr_N_n_v(1,:,:)
-1        log_likelihood2=100.0d0
+1        log_likelihood2=1000.0d0
         !read*, end_k
     end if
     

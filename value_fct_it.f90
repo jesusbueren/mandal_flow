@@ -1,4 +1,4 @@
-subroutine value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_new)
+subroutine value_fct_it(Ef_v,F,P,CCP_out,v_l,u_l,V_new)
     use dimensions;use primitives
     implicit none
     integer,intent(in)::P
@@ -8,8 +8,9 @@ subroutine value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_new)
     double precision,dimension(2*P-1,3)::V_old
     double precision,dimension((2*P-1)*3)::Vec_old,Vec_new
     double precision::crit,dist
-    double precision,dimension(2*P-1,2),intent(out)::CCP
+    double precision,dimension(2*P-1,2),intent(out)::CCP_out
     double precision,dimension(2*P-1,3),intent(out)::V_new
+    double precision,dimension(2*P-1,2)::CCP_in
     character::pause_k
     integer::it,it_max=8000
 
@@ -18,10 +19,11 @@ subroutine value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_new)
     dist=1.0d0
     crit=1.0d-12
     it=0
-    CCP=0.0d0
+    CCP_in=0.0d0
         
     do while (dist>crit .and. it<it_max)
-        call one_step_value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_old,V_new)
+        CCP_in=max(CCP_in,1d-18)
+        call one_step_value_fct_it(Ef_v,F,P,CCP_in,CCP_out,v_l,u_l,V_old,V_new)
         it=it+1       
         !Check contraction
         !!!!!!!!!!!!!!!!!!
@@ -37,6 +39,7 @@ subroutine value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_new)
             end if
             if (dist>crit)then
                 V_old=V_new
+                CCP_in=CCP_out
             end if
     end do  
     if (it==it_max)then
@@ -58,7 +61,7 @@ subroutine value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_new)
 end subroutine
     
         
-subroutine one_step_value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_old,V_new)
+subroutine one_step_value_fct_it(Ef_v,F,P,CCP_in,CCP_out,v_l,u_l,V_old,V_new)
     use dimensions;use primitives
     implicit none
     integer,intent(in)::P
@@ -69,11 +72,12 @@ subroutine one_step_value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_old,V_new)
     double precision,dimension(2*P-1,3),intent(out)::V_new
     double precision,dimension((2*P-1)*3)::Vec_old,Vec_new
     double precision,dimension(2*P-1)::v_00,v_0I,v_10,v_1I,vec_N
-    double precision,dimension(2*P-1,2),intent(inout)::CCP
+    double precision,dimension(2*P-1,2),intent(in)::CCP_in
+    double precision,dimension(2*P-1,2),intent(out)::CCP_out
     integer::ind
     character::pause_k
     
-    CCP=max(CCP,1d-18)
+    
     
     V_new=0.0d0
     
@@ -116,36 +120,40 @@ subroutine one_step_value_fct_it(Ef_v,F,P,CCP,v_l,u_l,V_old,V_new)
             !!Two wells (n=3)
             !!!!!!!!!!!!!!!!!!
                 do ind=1,2*P-1
-                    if (CCP(ind,2)/=0.0d0 .and. CCP(ind,2)/=1.0d0) then
+                    if (CCP_in(ind,2)/=0.0d0 .and. CCP_in(ind,2)/=1.0d0) then
                         V_new(ind,3)=T_g+Ef_v(ind,3)-2.0d0*tau-vec_N(ind)*tau_per_N & 
-                                        + CCP(ind,2)*(rho(2)*gamma-rho(2)*log(CCP(ind,2))) & 
-                                        + (1.0d0-CCP(ind,2))*(rho(2)*gamma-rho(2)*log(1.0d0-CCP(ind,2))) &
+                                        + CCP_in(ind,2)*(rho(2)*gamma-rho(2)*log(CCP_in(ind,2))) & 
+                                        + (1.0d0-CCP_in(ind,2))*(rho(2)*gamma-rho(2)*log(1.0d0-CCP_in(ind,2))) &
                                         + beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))**2.0d0*sum(F(ind,1:2*P-1,3,3)*V_old(1:2*P-1,3)) & !none fails
                                         + 2.0d0*beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))*PI_f_v(ind,3,P,v_l,u_l)*sum(F(ind,1:2*P-1,3,2)*V_old(1:2*P-1,2)) & !one fails
                                         + beta*PI_f_v(ind,3,P,v_l,u_l)**2.0d0*sum(F(ind,1:2*P-1,3,1)*V_old(1:2*P-1,1))  !both fail
                     else
                         V_new(ind,3)=T_g+Ef_v(ind,3)-2.0d0*tau-vec_N(ind)*tau_per_N & 
-                                        +rho(2)*gamma &                        
+                                        + rho(2)*gamma &                        
                                         + beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))**2.0d0*sum(F(ind,1:2*P-1,3,3)*V_old(1:2*P-1,3)) & !none fails
                                         + 2.0d0*beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))*PI_f_v(ind,3,P,v_l,u_l)*sum(F(ind,1:2*P-1,3,2)*V_old(1:2*P-1,2)) & !one fails
                                         + beta*PI_f_v(ind,3,P,v_l,u_l)**2.0d0*sum(F(ind,1:2*P-1,3,1)*V_old(1:2*P-1,1))  !both fail
                     end if
                 end do
-              
+                
+
+
                                 
-               CCP(1:2*P-1,1)=1.0d0/(1.0d0+exp(v_00(1:2*P-1)/rho(2)-v_0I(1:2*P-1)/rho(2)))
-               CCP(1:2*P-1,2)=1.0d0/(1.0d0+exp(v_10(1:2*P-1)/rho(2)-v_1I(1:2*P-1)/rho(2))) 
+               CCP_out(1:2*P-1,1)=1.0d0/(1.0d0+exp(v_00(1:2*P-1)/rho(2)-v_0I(1:2*P-1)/rho(2)))
+               CCP_out(1:2*P-1,2)=1.0d0/(1.0d0+exp(v_10(1:2*P-1)/rho(2)-v_1I(1:2*P-1)/rho(2))) 
+               
+               
                 
     
                
     
-    if (isnan(sum(CCP)) .or. isnan(sum(V_new))) then
+    if (isnan(sum(CCP_out)) .or. isnan(sum(V_new))) then
         print*,'error in vfi'
         print*,'v_00',v_00(1:2*P-1)
         print*,'v_0I',v_0I(1:2*P-1)
         print*,'v_10',v_10(1:2*P-1)
         print*,'v_1I',v_1I(1:2*P-1)
-        print*,'CCP',CCP(1:2*P-1,:)
+        print*,'CCP',CCP_out(1:2*P-1,:)
         read*,pause_k
     end if
     

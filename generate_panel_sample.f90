@@ -2,7 +2,7 @@ subroutine generate_panel_sample(params_MLE)
     use dimensions; use cadastral_maps; use simulation; use primitives
     implicit none
     double precision,dimension(par)::params_true,params_MLE
-    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,villages,unobs_types)::F_true
+    double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,villages,types_a)::F_true
     double precision,dimension(2*P_max-1,2,P_max,types_a,villages,unobs_types)::CCP_true
     double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types)::V_fct,V_social
     integer,dimension(plots_in_map,villages)::n_dist

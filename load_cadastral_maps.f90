@@ -20,7 +20,7 @@ subroutine load_cadastral_maps()
     
     !Area Type
     mean_area=0.0d0
-    do v_l=1,villages;do s_l=1,sims
+    do v_l=1,villages;do s_l=1,sims_tr
         do i=1,plots_v(v_l)
             do a_l=1,types_a-1
                 if (areas(v_l,i)<=area_lims(a_l)) then
@@ -37,7 +37,7 @@ subroutine load_cadastral_maps()
        
     !Load map (who is connected to who)
     neighbors_map=0
-    do v_l=1,villages;do s_l=1,sims
+    do v_l=1,villages;do s_l=1,sims_tr
         if (v_l<10) then
             Write( s_c1, '(I1)' )  v_l
             OPEN(UNIT=12, FILE=file_map//"map_"//s_c1//".csv")
@@ -101,7 +101,7 @@ subroutine load_cadastral_maps()
     
     v_l=1
     PA_stat=0
-    do i=1,plots_v(v_l);do s_l=1,sims
+    do i=1,plots_v(v_l);do s_l=1,sims_tr
         PA_stat(PA_type(i,1,v_l,s_l),1)=PA_stat(PA_type(i,1,v_l,s_l),1)+1
         PA_stat(PA_type(i,2,v_l,s_l),2)=PA_stat(PA_type(i,2,v_l,s_l),2)+1
     end do;end do
@@ -112,7 +112,7 @@ subroutine load_cadastral_maps()
 
     !Generate permanent unobserved heterogeneity type
     counter_type=0
-    do s_l=1,sims;do v_l=1,villages;do i=1,plots_v(v_l)
+    do s_l=1,sims_tr;do v_l=1,villages;do i=1,plots_v(v_l)
         call RANDOM_NUMBER(u_m)
         if (u_m<pr_unobs_t(1)) then
             unobs_types_i(i,v_l,s_l)=1
@@ -130,7 +130,7 @@ subroutine load_cadastral_maps()
 
     
     counter_type=0
-    do s_l=1,sims;do v_l=1,villages;do i=1,plots_v(v_l)
+    do s_l=1,sims_tr;do v_l=1,villages;do i=1,plots_v(v_l)
         counter_type(PA_type(i,1,v_l,s_l),PA_type(i,2,v_l,s_l),v_l,unobs_types_i(i,v_l,s_l))=counter_type(PA_type(i,1,v_l,s_l),PA_type(i,2,v_l,s_l),v_l,unobs_types_i(i,v_l,s_l))+1
     end do;end do;end do
     

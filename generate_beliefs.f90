@@ -11,31 +11,29 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types),intent(out)::joint_pr
     double precision,dimension(types_a,2),intent(out)::pr_d_a_n
     integer(8),dimension(2*P_max-1,3,P_max,types_a,unobs_types)::counter_u
-    integer(8)::T
+    integer(8)::T,d_it
     integer(8),dimension(plots_in_map,3)::state,state_old
-    integer(8),dimension(plots_in_map)::drill_old
     integer(8)::i_l,j_l,t_l,ind,N_all,n_l,P,A,P_l,n_l2,it,m_l,it_min,a_l,u_l,ind2,N_all2,i,r_l,s_l
-    double precision::u_d,u_s,u_f,u_m,it2,it3
+    double precision::u_d,u_s,u_f,u_m,it2,it3,y,dc
     integer(8):: its
-    double precision,allocatable,dimension(:,:)::NPV,total_N,NPV_PV,total_f,output,cultivated_area,high_type_fraction
+    double precision,allocatable,dimension(:,:)::NPV,total_N,NPV_PV,total_f,cultivated_area,high_type_fraction
     integer,allocatable,dimension(:,:,:)::pr_N_n_it_c
     double precision,allocatable,dimension(:,:,:,:)::NPV_by_a_n
     double precision,intent(out)::mean_N,social_output,private_output
     integer(8),dimension(2*P_max-1,2*P_max-1,3,3,P_max,types_a)::beliefs_c
     integer(8),dimension(1)::seed=321,seed2
-    integer(8),parameter::burn_t=100
+    integer(8),parameter::burn_t=99
     double precision,dimension(2*P_max-1,2*P_max-1,3,3,P_max,types_a)::F
     double precision,dimension(P_max)::dist
-    double precision,dimension(2*P_max-1)::CCP_aux
     character::continue_k
     integer(8),dimension(1):: seed_new
     character(LEN=1)::s_c1
-    character(LEN=2)::s_c2
+    character(LEN=2)::s_c2,v_s
     double precision,dimension(8)::draw
     integer,dimension(3,types_a)::count_a_n
     double precision,dimension(2*P_max-1,3),intent(out)::pr_N_n
     double precision,dimension(3,types_a),intent(out)::pr_na
-
+    double precision,dimension(plots_in_map)::aux_i
     
     !active_plots(415,1,1)
     
@@ -44,7 +42,6 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     T=8000000/plots_v(v_l) 
     its=T-burn_t-1
     allocate ( NPV(its,sims))
-    allocate ( output(its,sims))
     allocate ( cultivated_area(its,sims))
     allocate ( high_type_fraction(its,sims))
     allocate ( total_N(its,sims))
@@ -70,8 +67,6 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     end do;end do;end do;end do
     
     
-    
-    CCP_aux=1.0d0/(1.0d0+exp(-(-PI_s_v(1:2*P_max-1,2,P_max,v_l)*c_s-(1.0d0-PI_s_v(1:2*P_max-1,2,P_max,v_l))*c_d)/rho(2)))
     !print*,'smthg'
     !Call seed number
     
@@ -86,9 +81,15 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
     it=0
 
     count_a_n=0
+    
+    write (v_s, "(I2)") v_l
+    if (generate_data==1)then
+        OPEN(UNIT=12, FILE=path_results//"artificial_data_v"//v_s//".txt")
+    end if
 
     
     do s_l=1,sims;
+        state_old=1
         do t_l=1,T-1;
         !print*,t_l
         !simulate monsoon next period
@@ -101,7 +102,6 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
 
         if (t_l>burn_t) then
             NPV(t_l-burn_t,s_l)=0.0d0
-            output(t_l-burn_t,s_l)=0.0d0
             cultivated_area(t_l-burn_t,s_l)=0.0d0
             high_type_fraction(t_l-burn_t,s_l)=0.0d0
             NPV_PV(t_l-burn_t,s_l)=0.0d0
@@ -117,9 +117,9 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
         !print*,'t_l',t_l,'av number of wells per plot',real(sum(n_initial(1:plots_v(v_l),1))-plots_v(v_l))/real(plots_v(v_l))
         do i_l=1,plots_v(v_l)
             do r_l=1,8
-                call random_value( seed_new, draw(r_l) )
-            end do
-                  
+                call random_value(seed_new,draw(r_l))
+            end do  
+            d_it=0
             if (active_plots(i_l,v_l,s_l)==1) then  
                 N_all=1 !Indicates the number of wells in the adjacency
                 !Loop over all neighbors
@@ -135,6 +135,13 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
 
                 P=PA_type(i_l,1,v_l,s_l) !number of plots in the adjacency
                 A=PA_type(i_l,2,v_l,s_l) !area of the reference plot
+                
+                !Commment/uncomment island model
+
+                !print*,'Island model!'
+                !N_all=n_l
+                !n_l=state(i_l,1)
+                !P=1
             
                 !Locate position in the state space wrt to the CCP, PI_s_v and ,PI_f_v
                 if (n_l==1) then
@@ -163,10 +170,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                 !Compute NPV
                 if (t_l>burn_t) then  
                     it2=it2+1.0d0
-                    pr_N_n_it_c(ind,n_l,s_l)=pr_N_n_it_c(ind,n_l,s_l)+1.0d0
-                    NPV_PV(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*NPV_PV(t_l-burn_t,s_l)+1.0d0/dble(it2)*(V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))/area(A)
-                    NPV(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*NPV(t_l-burn_t,s_l)+1.0d0/dble(it2)*(V_social(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l)))/area(A)
-                    output(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*output(t_l-burn_t,s_l)+1.0d0/dble(it2)*(Ef_v(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))-c_e*dble(n_l-1))/area(A)
+                    pr_N_n_it_c(ind,n_l,s_l)=pr_N_n_it_c(ind,n_l,s_l)+1.0d0                    
                     total_N(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*total_N(t_l-burn_t,s_l)+1.0d0/dble(it2)*(n_l-1)
                     if (n_l>1) then
                         it3=it3+1
@@ -183,18 +187,21 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                         pr_d_a_n(A,n_l)=dble(count_a_n(n_l,A)-1)/dble(count_a_n(n_l,A))*pr_d_a_n(A,n_l)+1.0d0/dble(count_a_n(n_l,A))*CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))
                     end if
                 end if
-                !Well drilling decision and failures/successes
-                drill_old(i_l)=1
                 
+                !Well drilling decision and failures/successes
+                y=Ef_v(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))
+                dc=0.0d0
                 if (n_l==1) then !no well
                     u_d=draw(1) 
                     if (u_d<CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))) then !decides to drill
-                        drill_old(i_l)=2
                         u_s=draw(2) 
+                        d_it=1
                         if (u_s<PI_s_v(ind,n_l,P,v_l)) then !successful attempt
                             n_initial(i_l,1)=n_l+1
+                            dc=c_s
                         else !unsuccessful attempt
                             n_initial(i_l,1)=n_l
+                            dc=c_d
                         end if
                     else !decides not to drill
                         n_initial(i_l,1)=n_l
@@ -202,9 +209,10 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                 elseif (n_l==2) then !one well
                     u_d=draw(3) 
                     if (u_d<CCP(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))) then !decides to drill
-                        drill_old(i_l)=2
+                        d_it=1
                         u_s=draw(4) 
                         if (u_s<PI_s_v(ind,n_l,P,v_l)) then !successful attempt
+                            dc=c_d
                             u_f=draw(5) 
                             if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))) then !failure of the previous well
                                 n_initial(i_l,1)=n_l
@@ -212,6 +220,7 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                                 n_initial(i_l,1)=n_l+1
                             end if
                         else !unsuccessful attempt
+                            dc=c_s
                             u_f=draw(6) 
                             if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))) then !failure of the previous well PI_fm(:)
                                 n_initial(i_l,1)=n_l-1
@@ -224,26 +233,49 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
                         u_f=draw(7) 
                         if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))) then !failure of the previous well
                             n_initial(i_l,1)=n_l-1
-
                         else
                             n_initial(i_l,1)=n_l
                         end if 
                     end if 
                 elseif(n_l==3) then !two wells
                     u_f=draw(8) 
-                    if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))**2) then !failure of the two wells !PI_fm(:,1,3,1)
+                    if (u_f<PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))**2) then !failure of the two wells !PI_fm(:,1,3,1) !PI_fm(:,m_l,v_l,unobs_types_i(i_l,v_l,s_l))
                         n_initial(i_l,1)=n_l-2
-
-                    elseif (u_f<(1.0d0-PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l)))**2+PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))**2) then !failure of none
+                    elseif (u_f<(1.0d0-PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l)))**2+PI_fm(N_all-1,m_l,v_l,unobs_types_i(i_l,v_l,s_l))**2) then !failure of none (this is correct)
                         n_initial(i_l,1)=n_l
                     else !failure of one
                         n_initial(i_l,1)=n_l-1
-
                     end if 
                 else
                     print*,'error in gen beliefs 2'
+                end if 
+                if (t_l>burn_t) then
+                    aux_i(it2)=V_social(ind,1,P,A,unobs_types_i(i_l,v_l,s_l))/area(A) !aux_i(1:648)
+                    if (isnan((dble(n_l)-1.0d0)*((1.0d0-PI_s_v(ind,1,P,v_l))/PI_s_v(ind,1,P,v_l)*c_d+c_s))) then
+                    print*,'error in computing expected drilling cost'
+                    end if
+                    NPV(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*NPV(t_l-burn_t,s_l)+1.0d0/dble(it2)*V_social(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))/area(A) !(V_social(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))-(dble(n_l)-1.0d0)*((1.0d0-PI_s_v(ind,1,P,v_l))/PI_s_v(ind,1,P,v_l)*c_d+c_s))/area(A) 
+                    NPV_PV(t_l-burn_t,s_l)=dble(it2-1)/dble(it2)*NPV_PV(t_l-burn_t,s_l)+1.0d0/dble(it2)*V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))/area(A) !(V_fct(ind,n_l,P,A,unobs_types_i(i_l,v_l,s_l))-(dble(n_l)-1.0d0)*((1.0d0-PI_s_v(ind,1,P,v_l))/PI_s_v(ind,1,P,v_l)*c_d+c_s))/area(A) 
                 end if
-            end if                    
+            end if   
+            
+            
+            if (generate_data==1 .and. t_l>T-6) then
+                if (active_plots(i_l,v_l,s_l)==0) then  
+                    N_all=1 !Indicates the number of wells in the adjacency
+                    !Loop over all neighbors
+                    do j_l=1,PA_type(i_l,1,v_l,s_l) !PA_type(i_l,1) stores the number of plots in the adjacency
+                        if (state(neighbors(i_l,j_l,v_l,s_l),1)==2)  then  !neighbors(i_l,:,v_l,s_l) 
+                            N_all=N_all+1 !number of wells (there is one well)
+                        elseif (state(neighbors(i_l,j_l,v_l,s_l),1)==3)  then !neighbors(1,:,v_l,s_l)
+                            N_all=N_all+2 !number of wells (there is two wells)
+                        end if
+                    end do
+                    state(i_l,2)=N_all !second column in state: number of plots with one well
+                    n_l=state(i_l,1)
+                end if
+                write(12,'(<8>I10)'),v_l,s_l,i_l,active_plots(i_l,v_l,s_l),t_l-(T-6),n_l-1,N_all-(n_l-1)-1,d_it
+            end if
         end do
         !pr_N_n_it_c
         !Store current state
@@ -267,7 +299,11 @@ subroutine generate_beliefs(CCP,V_fct,V_social,Ef_v,n_initial,F_new,v_l,iteratio
         end if
         it=it+1
     end do 
-end do 
+    end do 
+    
+    if (generate_data==1)then
+        close(12)
+    end if
     
     ! In case I don't have observations for a given state, I consider that the transition pr 
     ! is the same for all possible future states
@@ -275,7 +311,6 @@ end do
     it2=0
     do P_l=1,P_max; do ind=1,2*P_l-1; do n_l=1,3; do n_l2=1,1; do a_l=1,types_a
         it2=it2+1
-        it_min=300000
         if (iterations(ind,n_l,n_l2,P_l,a_l)==0) then
             it=it+1
             F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=1.0d0/dble(2*P_l-1)
@@ -297,13 +332,13 @@ end do
         F_new(ind,1:2*P_l-1,n_l,n_l2,P_l,a_l)=1.0d0
     end do;end do;end do
     
-    social_output=sum(NPV)/dble(its*sims)
-    private_output=sum(NPV_PV)/dble(its*sims)
-    print*,'total output',sum(output)/dble(its*sims)
-    print*,'cultivated area',sum(cultivated_area)/dble(its*sims)
-    print*,'Fraction of active plots from a high type ',sum(high_type_fraction)/dble(its*sims)
+    social_output=sum(NPV)/dble(sims*its)
+    private_output=sum(NPV_PV)/dble(sims*its)
+
+    !print*,'cultivated area',sum(cultivated_area)/dble(its*sims)
+    !print*,'Fraction of active plots from a high type ',sum(high_type_fraction)/dble(its*sims)
     
-    mean_N=sum(total_N)/dble(its*sims)
+    mean_N=sum(total_N)/dble(its*sims) 
     do n_l=1,3;do ind=1,2*P_max-1
         pr_N_n(ind,n_l)=dble(sum(pr_N_n_it_c(ind,n_l,:)))/dble(sum(pr_N_n_it_c(:,n_l,:))) 
     end do;end do

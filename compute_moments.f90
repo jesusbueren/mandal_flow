@@ -160,7 +160,7 @@ subroutine compute_moments(data_in,string_name)
     close(12)
     
     OPEN(UNIT=12, FILE=path_results//"counter_all_N.txt")
-        write(12,*),counter_N2/sum(counter_N2)
+        write(12,*),counter_N2
     close(12)
 
         
@@ -173,13 +173,19 @@ subroutine compute_moments(data_in,string_name)
     close(12)
         
     pr_little_n_data=dble(counter_little_n)/dble(sum(counter_little_n))
+    var_little_n=pr_little_n_data*(1.0d0-pr_little_n_data)/dble(sum(counter_little_n))
     OPEN(UNIT=12, FILE=path_results//string_name//"_little_n.txt")
         write(12,*),counter_little_n/sum(counter_little_n)
     close(12)
         
 
     moment_own_nxa_data=moment_own_nxa 
+    var_own_nxa=moment_own_nxa_data*(1.0d0-moment_own_nxa_data)/dble(counter_own_nxa)
     moment_wa_data=moment_wa 
+    var_wa_data=moment_wa*(1.0d0-moment_wa)/counter_wa
+    do n_l=1,max_NFW
+        var_N(n_l)=sum(pr_N_n_data(n_l,:)*pr_little_n_data)*(1.0d0-sum(pr_N_n_data(n_l,:)*pr_little_n_data))/sum(counter_BigN_n)
+    end do
     
     
 end subroutine
