@@ -3,13 +3,13 @@
 	IMPLICIT NONE
 	INTEGER(I4B), INTENT(OUT) :: iter
 	REAL(DP), INTENT(IN) :: ftol
-	REAL(DP), DIMENSION(7+1), INTENT(INOUT) :: y
-	REAL(DP), DIMENSION(7+1,7), INTENT(INOUT) :: p
+	REAL(DP), DIMENSION(:), INTENT(INOUT) :: y
+	REAL(DP), DIMENSION(:,:), INTENT(INOUT) :: p
 	INTERFACE
 		FUNCTION func(x)
 		USE nrtype
 		IMPLICIT NONE
-		REAL(DP), DIMENSION(7), INTENT(IN) :: x
+		REAL(DP), DIMENSION(:), INTENT(IN) :: x
 		double precision :: func
 		END FUNCTION func
 	END INTERFACE
@@ -35,6 +35,7 @@
 		inhi=imaxloc(y(:))
 		y(ihi)=ytmp
 		rtol=2.0_dp*abs(y(ihi)-y(ilo))/(abs(y(ihi))+abs(y(ilo))+TINY)
+        print*,'rtol',rtol
 		if (rtol < ftol) then
 			call swap(y(1),y(ilo))
 			call swap(p(1,:),p(ilo,:))

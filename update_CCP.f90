@@ -31,7 +31,8 @@ subroutine update_CCP(V,F,Ef_v,P,CCP,v_l,u_l,a_l)
             !Attempt
             v_1I= -PI_s_v(1:2*P-1,2,P,v_l)*c_s-(1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*c_d &
                     +beta*PI_s_v(1:2*P-1,2,P,v_l)*(1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l))*matmul(F(:,:,2,3),V_t(:,3)) &
-                    +beta*(PI_s_v(1:2*P-1,2,P,v_l)*PI_f_v(1:2*P-1,2,P,v_l,u_l)+(1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*(1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l)))*matmul(F(:,:,2,2),V_t(:,2)) &
+                    +beta*(PI_s_v(1:2*P-1,2,P,v_l)*PI_f_v(1:2*P-1,2,P,v_l,u_l)+(1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*&
+                (1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l)))*matmul(F(:,:,2,2),V_t(:,2)) &
                     +beta*(1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*PI_f_v(1:2*P-1,2,P,v_l,u_l)*matmul(F(:,:,2,1),V_t(:,1)) 
 
     

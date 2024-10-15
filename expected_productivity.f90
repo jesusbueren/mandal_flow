@@ -16,7 +16,7 @@ subroutine expected_productivity(params,a,Ef_v,v_l,u_l)
     share_p=params(2)
     cost_p=0.0d0!params(3)
     !y=theta*( q^beta * a^gamma)
-    Ef_v=sqrt(-1.0d0)
+    Ef_v=-9.0d0
     !Compute expected productivity and generate the vector of it with the from 2*P-1 form
     do P=1,P_max  
         Ef=0.0d0
@@ -24,21 +24,21 @@ subroutine expected_productivity(params,a,Ef_v,v_l,u_l)
             do p_l=1,2*P-1;do k_l=1,K
                 if (cost_p>0.0d0) then
                     a_chosen=min((cost_p/theta_p/(1.0d0-beta_p))**(-1.0d0/beta_p)*q(k_l,1),a)
-                    Ef(p_l,m_l,2)=Ef(p_l,m_l,2)+(theta_p*q(k_l,1)**beta_p*a_chosen**gamma_p-cost_p*a_chosen)*PI_k(p_l,k_l,m_l,v_l,u_l)
+                    Ef(p_l,m_l,2)=Ef(p_l,m_l,2)+(theta_p*q(k_l,1)**beta_p*a_chosen**gamma_p-cost_p*a_chosen)*&
+                        PI_k(p_l,k_l,m_l,v_l,u_l)
                 else
-                    !Ef(p_l,m_l,2)=Ef(p_l,m_l,2)+(theta_p*q(k_l,1)**beta_p*a**gamma_p)*PI_k(p_l,k_l,m_l,v_l,u_l)
-                    Ef(p_l,m_l,2)=Ef(p_l,m_l,2)+(theta_p*(share_p*q(k_l,1)**beta_p+(1.0d0-share_p)*a**beta_p)**(1.0d0/beta_p))*PI_k(p_l,k_l,m_l,v_l,u_l)
+                    Ef(p_l,m_l,2)=Ef(p_l,m_l,2)+(theta_p*(share_p*q(k_l,1)**beta_p+(1.0d0-share_p)*a**beta_p)**(1.0d0/beta_p))*&
+                        PI_k(p_l,k_l,m_l,v_l,u_l)
                 end if
             end do;end do
             do p_l=2,2*P;do k_l=1,K;do k_l2=1,K
                 if (cost_p>0.0d0) then
                     a_chosen=min((cost_p/theta_p/(1.0d0-beta_p))**(-1.0d0/beta_p)*(q(k_l,1)+q(k_l2,1)),a)
-                    Ef(p_l,m_l,3)=Ef(p_l,m_l,3)+(theta_p*(q(k_l,1)+q(k_l2,1))**beta_p*a_chosen**gamma_p-cost_p*a_chosen) &
+                    Ef(p_l,m_l,3)=Ef(p_l,m_l,3)+(theta_p*(q(k_l,1)+q(k_l2,1))**beta_p*a_chosen**gamma_p-cost_p*a_chosen)&
                         *PI_k(p_l,k_l,m_l,v_l,u_l)*PI_k(p_l,k_l2,m_l,v_l,u_l)
-                else
-                    !Ef(p_l,m_l,3)=Ef(p_l,m_l,3)+(theta_p*(q(k_l,1)+q(k_l2,1))**beta_p*a**gamma_p) &
-                    !    *PI_k(p_l,k_l,m_l,v_l,u_l)*PI_k(p_l,k_l2,m_l,v_l,u_l) 
-                    Ef(p_l,m_l,3)=Ef(p_l,m_l,3)+(theta_p*(share_p*(q(k_l,1)+q(k_l2,1))**beta_p+(1.0d0-share_p)*a**beta_p)**(1.0d0/beta_p)) &
+                else 
+                    Ef(p_l,m_l,3)=Ef(p_l,m_l,3)+&
+                        (theta_p*(share_p*(q(k_l,1)+q(k_l2,1))**beta_p+(1.0d0-share_p)*a**beta_p)**(1.0d0/beta_p)) &
                         *PI_k(p_l,k_l,m_l,v_l,u_l)*PI_k(p_l,k_l2,m_l,v_l,u_l) 
                 end if
             end do; end do;end do
@@ -50,9 +50,11 @@ subroutine expected_productivity(params,a,Ef_v,v_l,u_l)
             if (n_l==1) then
                 Ef_v(1:P*2-1,n_l,P)=0.0d0
             elseif (n_l==2) then
-                Ef_v(1:P*2-1,n_l,P)=PI_m(1,v_l)*Ef(1:2*P-1,1,n_l)+PI_m(2,v_l)*Ef(1:2*P-1,2,n_l) !Compute the expected return across monzoons
+                !Compute the expected return across monzoons
+                Ef_v(1:P*2-1,n_l,P)=PI_m(1,v_l)*Ef(1:2*P-1,1,n_l)+PI_m(2,v_l)*Ef(1:2*P-1,2,n_l) 
             elseif (n_l==3) then
-                Ef_v(1:P*2-1,n_l,P)=PI_m(1,v_l)*Ef(2:2*P,1,n_l)+PI_m(2,v_l)*Ef(2:2*P,2,n_l) !Compute the expected return across monzoons
+                !Compute the expected return across monzoons
+                Ef_v(1:P*2-1,n_l,P)=PI_m(1,v_l)*Ef(2:2*P,1,n_l)+PI_m(2,v_l)*Ef(2:2*P,2,n_l) 
             end if           
         end do
         !print*,'u_l',u_l

@@ -19,7 +19,7 @@ subroutine generate_panel_sample(params_MLE)
     n_dist(:,v_l)=1
     V_fct=0.0d0
     V_social=0.0d0
-    call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n,pr_n)
+    call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),pr_d_a_n,pr_N_n,pr_n)
     
     
 end subroutine

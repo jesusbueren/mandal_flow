@@ -15,12 +15,12 @@ subroutine input_primitives()
      close(12)
 
      
-     
+        
     !print*,'kill heterogeneity across villages in pr of good moonzoon and success pr'
     !!pr of good moonzoon from drill_export.xls (hanan's data)
     PI_m(2,:)=rain_success_csv(2,:) 
     !PI_s: Pr. of success (varies by village)
-    PI_s(1,:)=rain_success_csv(3,:) 
+    PI_s(1,:)=0.375d0 !rain_success_csv(3,:) 
     
     !Discharge distribution
     q(:,1)=(/0.10d0,0.25d0,0.50d0,0.75d0,1.0d0/)
@@ -54,8 +54,8 @@ subroutine input_primitives()
         end do
 
         !Fill in the probability of success/failure in vector form of dimension 2*P-1
-        PI_s_v(:,:,:,v_l)=sqrt(-1.0d0)
-        PI_f_v(:,:,:,v_l,u_l)=sqrt(-1.0d0)
+        PI_s_v(:,:,:,v_l)=-9.0d0
+        PI_f_v(:,:,:,v_l,u_l)=-9.0d0
         do P=1,P_max       
             do n_l=1,3
                 !No own wells

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{0DD610D7-9C1D-4B68-9892-FF7814E77526}">
+	<Platforms>
+		<Platform Name="Win32"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole" StackReserveSize="1000000000" StackCommitSize="1000000000"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
+		<Configuration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" RuntimeLibrary="rtMultiThreadedDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole" StackReserveSize="50000000" StackCommitSize="50000000"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/>
+				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd;h;inc">
+		<File RelativePath=".\amoeba.f90"/>
+		<File RelativePath=".\brent.f90"/>
+		<File RelativePath=".\compute_eq_F_CCP.f90"/>
+		<File RelativePath=".\compute_moments.f90"/>
+		<File RelativePath=".\counterfactual_2.f90"/>
+		<File RelativePath=".\estimation2.f90"/>
+		<File RelativePath=".\expected_productivity.f90"/>
+		<File RelativePath=".\generate_beliefs.f90"/>
+		<File RelativePath=".\generate_C.f90"/>
+		<File RelativePath=".\generate_transition_beliefs.f90"/>
+		<File RelativePath=".\input_primitives.f90"/>
+		<File RelativePath=".\linmin.f90"/>
+		<File RelativePath=".\load_cadastral_maps.f90"/>
+		<File RelativePath=".\main.f90"/>
+		<File RelativePath=".\mnbrack.f90"/>
+		<File RelativePath=".\modules.f90"/>
+		<File RelativePath=".\monte_carlo.f90"/>
+		<File RelativePath=".\nr.f90"/>
+		<File RelativePath=".\nrtype.f90"/>
+		<File RelativePath=".\nrutile.f90"/>
+		<File RelativePath=".\policy_fct_it.f90"/>
+		<File RelativePath=".\powell.f90"/>
+		<File RelativePath=".\transitional_dynamics.f90"/>
+		<File RelativePath=".\update_CCP.f90"/>
+		<File RelativePath=".\valuation.f90"/>
+		<File RelativePath=".\value_fct_it.f90"/></Filter>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl"/></Files>
+	<Globals/></VisualStudioProject>

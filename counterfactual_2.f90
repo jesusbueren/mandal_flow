@@ -7,10 +7,11 @@ subroutine counterfactual_2(params_MLE)
     double precision,dimension(2*P_max-1,3,P_max,types_a,unobs_types)::V_fct,V_social
     integer,dimension(plots_in_map,villages)::n_dist
     double precision,dimension(villages)::mean_N,social_output,private_output
-    double precision::mle
+    double precision::mle,d_rate,delta_PV_model
+    double precision,dimension(types_a)::pr_D_model
     integer::v_l,p_l,it,i_l,j_l,ind
     character::end_key
-    integer,parameter::nkk=1
+    integer,parameter::nkk=20
     double precision,dimension(nkk)::tau_grid
     double precision,dimension(plots_i,unobs_types)::posterior_type
     double precision,dimension(types_a,2)::pr_d_a_n
@@ -25,14 +26,7 @@ subroutine counterfactual_2(params_MLE)
             double precision,dimension(par),intent(in)::params_MLE
             double precision::log_likelihood2
         end function log_likelihood2
-     end interface
-    
-
-     shrinkage_p=params_MLE(5)
-     logit_constrain_p=(/params_MLE(4),params_MLE(6)/)
-     
-
-     call load_cadastral_maps()
+     end interface     
     
     tau_grid(1)=0.0d0
     if (nkk>1) then
@@ -51,7 +45,7 @@ subroutine counterfactual_2(params_MLE)
         print*,'exp',p_l
         print*,'village,',v_l 
         tau=tau_grid(p_l)
-        tau_per_N=0.0d0!tau_grid(p_l)
+        tau_per_N=tau_grid(p_l)
         if (p_l==1) then
             V_fct=0.0d0
             V_social=0.0d0
@@ -64,15 +58,16 @@ subroutine counterfactual_2(params_MLE)
         n_dist=1
         CCP_true=0.07d0
 
-        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,mean_N(v_l),social_output(v_l),private_output(v_l),Pr_u_X(:,:,:,:,v_l,:),pr_d_a_n,pr_N_n,pr_na)
+        call compute_eq_F_CCP(params_MLE,F_true(:,:,:,:,:,v_l,:),CCP_true(:,:,:,:,v_l,:),V_fct,V_social,n_dist(:,v_l),v_l,&
+            mean_N(v_l),social_output(v_l),private_output(v_l),pr_d_a_n,pr_N_n,pr_na,d_rate,pr_D_model,delta_PV_model)
         
         if (p_l==1 .and. v_l==1) then
             OPEN(UNIT=12, FILE=path_results//"counterfactuals_new.txt")
-            write(12,'(F10.3,I4,F10.3,F10.3,F10.3,F10.3,F10.3)'),tau,v_l,mean_N(v_l),social_output(v_l),private_output(v_l)
+            write(12,'(F10.3,I4,F10.3,F10.3,F10.3,F10.3,F10.3,F10.3)'),tau,v_l,mean_N(v_l),social_output(v_l),private_output(v_l),d_rate
             close(12)
         else
             OPEN(UNIT=12, FILE=path_results//"counterfactuals_new.txt",access='append')
-            write(12,'(F10.3,I4,F10.3,F10.3,F10.3,F10.3,F10.3)'),tau,v_l,mean_N(v_l),social_output(v_l),private_output(v_l)
+            write(12,'(F10.3,I4,F10.3,F10.3,F10.3,F10.3,F10.3,F10.3)'),tau,v_l,mean_N(v_l),social_output(v_l),private_output(v_l),d_rate
             close(12)
         end if        
     end do;end do

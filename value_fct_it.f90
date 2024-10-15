@@ -30,10 +30,10 @@ subroutine value_fct_it(Ef_v,F,P,CCP_out,v_l,u_l,V_new)
             Vec_old=reshape(V_old,(/(2*P-1)*3/))
             Vec_new=reshape(V_new,(/(2*P-1)*3/))
             dist=maxval(abs(Vec_old-Vec_new))
-            if (dist==1.0d0/0.0d0)then
-                print*,Vec_old
-                read*,pause_k
-            end if
+            !if (dist==1.0d0/0.0d0)then
+            !    print*,Vec_old
+            !    read*,pause_k
+            !end if
             if (it==it_max)then
                 print*,'no convergence in vfi',dist
             end if
@@ -107,9 +107,13 @@ subroutine one_step_value_fct_it(Ef_v,F,P,CCP_in,CCP_out,v_l,u_l,V_old,V_new)
                 !Attempt
                 v_1I(1:2*P-1)=T_g+Ef_v(1:2*P-1,2)-tau-vec_N*tau_per_N &
                         -PI_s_v(1:2*P-1,2,P,v_l)*c_s-(1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*c_d &
-                        +beta*(PI_s_v(1:2*P-1,2,P,v_l)*(1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l))*matmul(F(1:2*P-1,1:2*P-1,2,3),V_old(1:2*P-1,3))) & !Success in the new and no failure of the old
-                        +beta*(PI_s_v(1:2*P-1,2,P,v_l)*PI_f_v(1:2*P-1,2,P,v_l,u_l)+(1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*(1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l)))*matmul(F(1:2*P-1,1:2*P-1,2,2),V_old(1:2*P-1,2)) & ! Success and failure of the old or failure of the new but no faile of the old
-                        +beta*((1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*PI_f_v(1:2*P-1,2,P,v_l,u_l)*matmul(F(1:2*P-1,1:2*P-1,2,1),V_old(1:2*P-1,1)))  !failure in both
+                        +beta*(PI_s_v(1:2*P-1,2,P,v_l)*(1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l))*&
+                    matmul(F(1:2*P-1,1:2*P-1,2,3),V_old(1:2*P-1,3))) & !Success in the new and no failure of the old
+                    +beta*(PI_s_v(1:2*P-1,2,P,v_l)*PI_f_v(1:2*P-1,2,P,v_l,u_l)+&
+                    (1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*(1.0d0-PI_f_v(1:2*P-1,2,P,v_l,u_l)))*& ! Success and failure of the old 
+                    matmul(F(1:2*P-1,1:2*P-1,2,2),V_old(1:2*P-1,2)) & ! or failure of the new but no failure of the old
+                    +beta*((1.0d0-PI_s_v(1:2*P-1,2,P,v_l))*PI_f_v(1:2*P-1,2,P,v_l,u_l)&
+                    *matmul(F(1:2*P-1,1:2*P-1,2,1),V_old(1:2*P-1,1)))  !failure in both
 
                 
                 !Value function
@@ -122,17 +126,19 @@ subroutine one_step_value_fct_it(Ef_v,F,P,CCP_in,CCP_out,v_l,u_l,V_old,V_new)
                 do ind=1,2*P-1
                     if (CCP_in(ind,2)/=0.0d0 .and. CCP_in(ind,2)/=1.0d0) then
                         V_new(ind,3)=T_g+Ef_v(ind,3)-2.0d0*tau-vec_N(ind)*tau_per_N & 
-                                        + CCP_in(ind,2)*(rho(2)*gamma-rho(2)*log(CCP_in(ind,2))) & 
-                                        + (1.0d0-CCP_in(ind,2))*(rho(2)*gamma-rho(2)*log(1.0d0-CCP_in(ind,2))) &
-                                        + beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))**2.0d0*sum(F(ind,1:2*P-1,3,3)*V_old(1:2*P-1,3)) & !none fails
-                                        + 2.0d0*beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))*PI_f_v(ind,3,P,v_l,u_l)*sum(F(ind,1:2*P-1,3,2)*V_old(1:2*P-1,2)) & !one fails
-                                        + beta*PI_f_v(ind,3,P,v_l,u_l)**2.0d0*sum(F(ind,1:2*P-1,3,1)*V_old(1:2*P-1,1))  !both fail
+                        + CCP_in(ind,2)*(rho(2)*gamma-rho(2)*log(CCP_in(ind,2))) & 
+                        + (1.0d0-CCP_in(ind,2))*(rho(2)*gamma-rho(2)*log(1.0d0-CCP_in(ind,2))) &
+                        + beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))**2.0d0*sum(F(ind,1:2*P-1,3,3)*V_old(1:2*P-1,3)) & !none fails
+                        + 2.0d0*beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))*&
+                            PI_f_v(ind,3,P,v_l,u_l)*sum(F(ind,1:2*P-1,3,2)*V_old(1:2*P-1,2)) & !one fails
+                        + beta*PI_f_v(ind,3,P,v_l,u_l)**2.0d0*sum(F(ind,1:2*P-1,3,1)*V_old(1:2*P-1,1))  !both fail
                     else
                         V_new(ind,3)=T_g+Ef_v(ind,3)-2.0d0*tau-vec_N(ind)*tau_per_N & 
-                                        + rho(2)*gamma &                        
-                                        + beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))**2.0d0*sum(F(ind,1:2*P-1,3,3)*V_old(1:2*P-1,3)) & !none fails
-                                        + 2.0d0*beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))*PI_f_v(ind,3,P,v_l,u_l)*sum(F(ind,1:2*P-1,3,2)*V_old(1:2*P-1,2)) & !one fails
-                                        + beta*PI_f_v(ind,3,P,v_l,u_l)**2.0d0*sum(F(ind,1:2*P-1,3,1)*V_old(1:2*P-1,1))  !both fail
+                            + rho(2)*gamma &                        
+                            + beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))**2.0d0*sum(F(ind,1:2*P-1,3,3)*V_old(1:2*P-1,3)) & !none fails
+                            + 2.0d0*beta*(1.0d0-PI_f_v(ind,3,P,v_l,u_l))*PI_f_v(ind,3,P,v_l,u_l)*&
+                            sum(F(ind,1:2*P-1,3,2)*V_old(1:2*P-1,2)) & !one fails
+                            + beta*PI_f_v(ind,3,P,v_l,u_l)**2.0d0*sum(F(ind,1:2*P-1,3,1)*V_old(1:2*P-1,1))  !both fail
                     end if
                 end do
                 
